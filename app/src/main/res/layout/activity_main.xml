@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/statusText"
+        android:layout_width="0dp"
+        android:layout_height="80dp"
+        android:background="#bdbdbd"
+        android:text="Połączenie z urządzeniem: nie połączono"
+        android:textAlignment="center"
+        android:gravity="center"
+        android:textSize="26sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/actionReference"
+        android:layout_width="0dp"
+        android:layout_height="158dp"
+        android:background="#bfaaba"
+        android:gravity="center"
+        android:text="Poczekaj na połączenie z urządzeniem."
+        android:textAlignment="center"
+        android:textSize="26sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/statusText" />
+
+    <ToggleButton
+        android:id="@+id/sensorCalibrate"
+        android:layout_width="221dp"
+        android:layout_height="74dp"
+        android:layout_marginStart="92dp"
+        android:layout_marginTop="32dp"
+        android:textOff="Kliknij, żeby zacząć kalibrację"
+        android:textOn="Zakończ kalibrację"
+        android:text="Skalibruj"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/actionReference" />
+
+    <Button
+        android:id="@+id/btnSensor"
+        android:layout_width="221dp"
+        android:layout_height="74dp"
+        android:layout_marginStart="92dp"
+        android:text="Rozpocznij"
+        android:enabled="false"
+        app:layout_constraintBottom_toTopOf="@+id/btnData"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sensorCalibrate"
+        app:layout_constraintVertical_bias="0.5" />
+
+    <Button
+        android:id="@+id/btnData"
+        android:layout_width="221dp"
+        android:layout_height="74dp"
+        android:layout_marginStart="92dp"
+        android:layout_marginBottom="56dp"
+        android:text="Przegląd wcześniejszych danych"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
