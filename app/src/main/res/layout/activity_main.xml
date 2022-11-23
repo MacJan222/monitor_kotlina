@@ -35,11 +35,11 @@
         android:id="@+id/sensorCalibrate"
         android:layout_width="221dp"
         android:layout_height="74dp"
-        android:layout_marginStart="92dp"
         android:layout_marginTop="32dp"
+        android:text="Skalibruj"
         android:textOff="Kliknij, żeby zacząć kalibrację"
         android:textOn="Zakończ kalibrację"
-        android:text="Skalibruj"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/actionReference" />
 
@@ -47,10 +47,10 @@
         android:id="@+id/btnSensor"
         android:layout_width="221dp"
         android:layout_height="74dp"
-        android:layout_marginStart="92dp"
-        android:text="Rozpocznij"
         android:enabled="false"
+        android:text="Rozpocznij"
         app:layout_constraintBottom_toTopOf="@+id/btnData"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/sensorCalibrate"
         app:layout_constraintVertical_bias="0.5" />
@@ -59,10 +59,10 @@
         android:id="@+id/btnData"
         android:layout_width="221dp"
         android:layout_height="74dp"
-        android:layout_marginStart="92dp"
         android:layout_marginBottom="56dp"
         android:text="Przegląd wcześniejszych danych"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
 

@@ -1,14 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <com.androidplot.xy.XYPlot
+        android:id="@+id/sensorPlot"
+        android:layout_width="0dp"
+        android:layout_height="229dp"
+        style="@style/APDefacto.Light"
+        app:title="Dane"
+        app:rangeTitle="range"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
     <TextView
-        android:id="@+id/textViewContactUs"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="TextView"
-        tools:layout_editor_absoluteX="101dp"
-        tools:layout_editor_absoluteY="302dp" />
+        android:id="@+id/minMaxTextView"
+        android:layout_width="149dp"
+        android:layout_height="57dp"
+        android:text="minMaxValuesHere"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnEnd" />
+
+    <Button
+        android:id="@+id/btnStart"
+        android:layout_width="199dp"
+        android:layout_height="77dp"
+        android:layout_marginTop="44dp"
+        android:text="Start"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sensorPlot" />
+
+    <Button
+        android:id="@+id/btnEnd"
+        android:layout_width="199dp"
+        android:layout_height="77dp"
+        android:layout_marginTop="36dp"
+        android:text="Zakończ"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnStart" />
+
+    <TextView
+        android:id="@+id/randomDataTextView"
+        android:layout_width="170dp"
+        android:layout_height="57dp"
+        android:text="randomDataHere"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/minMaxTextView" />
 </androidx.constraintlayout.widget.ConstraintLayout>

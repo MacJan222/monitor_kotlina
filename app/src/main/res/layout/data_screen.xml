@@ -6,7 +6,7 @@
     android:layout_height="match_parent">
 
     <com.androidplot.xy.XYPlot
-        android:id="@+id/data_plot"
+        android:id="@+id/dataPlot"
         android:layout_width="0dp"
         android:layout_height="229dp"
         style="@style/APDefacto.Light"
@@ -24,7 +24,7 @@
         android:text="Odtwórz dane"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/data_plot" />
+        app:layout_constraintTop_toBottomOf="@+id/dataPlot" />
 
     <TextView
         android:id="@+id/pathToFile"

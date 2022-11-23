@@ -36,13 +36,10 @@ class DataScreen : Activity() {
 
             println(selectedFile?.lastPathSegment)
             val path = selectedFile?.lastPathSegment.toString().removePrefix("raw:")
-            println(path)
+            //println(path)
             pathToFile.text = getTextContent(path)
 
-            val bufferedReader: BufferedReader = File(selectedFile.toString()).bufferedReader()
-            val inputString = bufferedReader.use { it.readText() }
-            println(inputString)
-            //val lines = this::class.java.getResourceAsStream(selectedFile.toString())?.bufferedReader()?.readLines()
+
         }
     }
 

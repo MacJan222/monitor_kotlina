@@ -34,14 +34,16 @@ class MainActivity : AppCompatActivity() {
         requestPermission()
 
         val dummyData = DummyData()
-        var minMax: Pair<Float,Float>
+        var minMax = Pair(0.0F,0.0F)
 
         btnData.setOnClickListener {
             startActivity(Intent(baseContext, DataScreen::class.java))
         }
 
         btnSensor.setOnClickListener {
-            startActivity(Intent(baseContext, SensorScreen::class.java))
+            val intent = Intent(baseContext, SensorScreen::class.java)
+            intent.putExtra("minMax",minMax.toString())
+            startActivity(intent)
         }
 
         sensorCalibrate.setOnCheckedChangeListener{

@@ -5,6 +5,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 class DummyData {
+
     var timer = Timer()
     var rnd = 0.0F
     var arr: ArrayList<Float> = arrayListOf()
