@@ -2,8 +2,14 @@ package com.example.helloworld
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import androidx.appcompat.app.AppCompatActivity
+import com.androidplot.xy.LineAndPointFormatter
+import com.androidplot.xy.SimpleXYSeries
+import com.androidplot.xy.XYSeries
 import kotlinx.android.synthetic.main.data_screen.*
 import java.io.BufferedReader
 import java.io.File
@@ -16,9 +22,13 @@ class DataScreen : Activity() {
         setContentView(R.layout.data_screen)
 
         btnDataPlot.setOnClickListener{
+            dataPlot.clear()
             val intent = Intent()
-                .setType("*/*")
-                .setAction(Intent.ACTION_GET_CONTENT)
+            //val z =Uri.parse(baseContext.getExternalFilesDir(null)?.getPath()
+               //     +  File.separator + "myFolder" + File.separator)
+            //println(z)
+            intent.setDataAndType(Uri.parse(Environment.getExternalStorageDirectory().getPath()), "*/*")
+            intent.setAction(Intent.ACTION_GET_CONTENT)
 
             startActivityForResult(Intent.createChooser(intent, "Select a file"), 777)
         }
@@ -30,15 +40,20 @@ class DataScreen : Activity() {
 
         if (requestCode == 777 && resultCode == AppCompatActivity.RESULT_OK) {
 
-            val selectedFile = data?.data //The uri with the location of the file
+            val selectedFile = data?.data?.path //The uri with the location of the file
+            val fileName = selectedFile?.split("/")?.last()
+            val path = baseContext.getExternalFilesDir(null).toString().removeSuffix("files")
+            val selectedFilePath = path + fileName
+            //pathToFile.text = getTextContent(path+fileName)
+            //var values: ArrayList<Float> = arrayListOf()
+            val values = getTextContent(selectedFilePath).split("\r?\n|\r".toRegex()).dropLast(1).map {it.toFloat()}
+            //println("AAA"+values)
+            val seriesFormat = LineAndPointFormatter(Color.BLUE, Color.BLACK,null,null)
+            val series: XYSeries = SimpleXYSeries(values, SimpleXYSeries.ArrayFormat.Y_VALS_ONLY, "")
+            dataPlot.addSeries(series,seriesFormat)
+            dataPlot.redraw()
 
-            // Get the File path from the Uri
-
-            println(selectedFile?.lastPathSegment)
-            val path = selectedFile?.lastPathSegment.toString().removePrefix("raw:")
-            //println(path)
-            pathToFile.text = getTextContent(path)
-
+            //TODO: PRZESUWANIE I PRZYBLIŻANIE WYKRESU
 
         }
     }

@@ -10,11 +10,18 @@ import com.androidplot.xy.SimpleXYSeries
 import com.androidplot.xy.XYSeries
 import kotlinx.android.synthetic.main.sensor_screen.*
 import org.w3c.dom.Text
+import java.io.File
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
 class SensorScreen : Activity() {
     val DISPLAY = 200
+
+    val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    val date = Date()
+    var current = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.sensor_screen)
@@ -30,15 +37,19 @@ class SensorScreen : Activity() {
         //var sensorData: ArrayList<Float> = arrayListOf()
 
         btnStart.setOnClickListener {
+            sensorPlot.clear()
             btnStart.isEnabled = false
             startRandomData()
+            val dirPath = baseContext.getExternalFilesDir(null).toString().removeSuffix("files")
+            current = dirPath + formatter.format(date) + ".txt"
+            //minMaxTextView.text = baseContext.getExternalFilesDir(null).toString()
         }
 
         btnEnd.setOnClickListener {
             stopRandomData()
             btnStart.isEnabled = true
             arr = arrayListOf()
-            sensorPlot.clear()
+
         }
 
 
@@ -65,6 +76,7 @@ class SensorScreen : Activity() {
         override fun run() {
             //setContentView(R.layout.sensor_screen)
             rnd=randomNumber()
+            File(current).appendText(rnd.toString()+"\n")
             //findViewById<TextView>(R.id.randomDataTextView).text=rnd.toString()
             this@SensorScreen.runOnUiThread(java.lang.Runnable {
                 findViewById<TextView>(R.id.randomDataTextView).text=rnd.toString()
