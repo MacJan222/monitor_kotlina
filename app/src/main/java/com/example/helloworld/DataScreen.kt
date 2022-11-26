@@ -7,22 +7,29 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import androidx.appcompat.app.AppCompatActivity
-import com.androidplot.xy.LineAndPointFormatter
-import com.androidplot.xy.SimpleXYSeries
-import com.androidplot.xy.XYSeries
+import androidx.constraintlayout.motion.widget.Debug.getState
+import com.androidplot.xy.*
 import kotlinx.android.synthetic.main.data_screen.*
-import java.io.BufferedReader
 import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
+import java.text.FieldPosition
+import java.text.Format
+import java.text.ParsePosition
+
 
 class DataScreen : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.data_screen)
 
+        // TO JEST ZOOM I PAN aka przesuwanie i przyblizanie wykresu
+        PanZoom.attach(dataPlot)
+
         btnDataPlot.setOnClickListener{
             dataPlot.clear()
+            //PanZoom.attach(dataPlot).zoom = null
+            //var dataPlotPanZoom = PanZoom.attach(dataPlot)
             val intent = Intent()
             //val z =Uri.parse(baseContext.getExternalFilesDir(null)?.getPath()
                //     +  File.separator + "myFolder" + File.separator)
@@ -33,7 +40,9 @@ class DataScreen : Activity() {
             startActivityForResult(Intent.createChooser(intent, "Select a file"), 777)
         }
 
+
     }
+
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -53,7 +62,22 @@ class DataScreen : Activity() {
             dataPlot.addSeries(series,seriesFormat)
             dataPlot.redraw()
 
-            //TODO: PRZESUWANIE I PRZYBLIŻANIE WYKRESU
+            dataPlot.graph.getLineLabelStyle(XYGraphWidget.Edge.BOTTOM).format = object : Format() {
+                override fun format(
+                    obj: Any?,
+                    toAppendTo: StringBuffer,
+                    pos: FieldPosition
+                ) : StringBuffer {
+                    val i = Math.round((obj as Number).toFloat())
+                    return toAppendTo.append(values[i])
+                }
+
+                override fun parseObject(p0: String?, p1: ParsePosition?): Any? {
+                    return null
+                }
+
+
+            }
 
         }
     }
