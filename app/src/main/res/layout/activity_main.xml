@@ -39,7 +39,7 @@
         android:text="Skalibruj"
         android:textOff="Kliknij, żeby zacząć kalibrację"
         android:textOn="Zakończ kalibrację"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/btnBluetooth"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/actionReference" />
 
@@ -65,7 +65,15 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-
+    <Button
+        android:id="@+id/btnBluetooth"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_marginTop="32dp"
+        android:text="Bluetooth"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/sensorCalibrate"
+        app:layout_constraintTop_toBottomOf="@+id/actionReference" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
