@@ -10,7 +10,10 @@ import android.content.pm.PackageManager
 import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
+import android.view.WindowManager
+import android.widget.TextView
 import android.widget.Toast
+import android.widget.ToggleButton
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -19,7 +22,6 @@ import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.IOException
 import java.util.*
-import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,10 +29,10 @@ class MainActivity : AppCompatActivity() {
     private var isReadPermissionGranted = false
     private var isWritePermissionGranted = false
     private var isBluetoothPermissionGranted = false
-    val sensorUUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-    var address = String()
+    //val sensorUUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+    var address: String? = null
     var isConnected = false
-    var connectSuccess = false
+    //var connectSuccess = false
 
     companion object {
         var ourSensor: BluetoothDevice? = null
@@ -43,6 +45,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
@@ -62,12 +65,16 @@ class MainActivity : AppCompatActivity() {
 
             if(bluetoothAdapter.isEnabled){
                 getPairedDevice()
-                ConnectToDevice(this@MainActivity).execute()
+                if(address != null) {
+                    ConnectToDevice(this@MainActivity).execute()
+                }
             }
             else{
                 bluetoothAdapter.enable()
                 getPairedDevice()
-                ConnectToDevice(this@MainActivity).execute()
+                if(address != null) {
+                    ConnectToDevice(this@MainActivity).execute()
+                }
             }
 //            if(bluetoothAdapter == null){
 //                Toast.makeText(this@MainActivity, "Urządzenie nie obsługuje bluetooth!", Toast.LENGTH_SHORT).show()
@@ -110,6 +117,19 @@ class MainActivity : AppCompatActivity() {
 //        }
 //
 //        }
+
+
+
+        sensorCalibrate.setOnCheckedChangeListener{
+                _,isChecked-> if(isChecked) {
+            dummyData.startRandomData()
+        } else{
+            dummyData.stopRandomData()
+            //dummyData.resetData()
+            minMax = dummyData.getMinMax()
+            btnSensor.isEnabled = true
+        }
+        }
 
     }
 
@@ -171,7 +191,7 @@ class MainActivity : AppCompatActivity() {
         {
             Toast.makeText(this@MainActivity, "Nie znaleziono czujnika! Upewnij się, że sparowałeś urządzenie!", Toast.LENGTH_SHORT).show()
         }
-        if(ourSensor?.name!!.isEmpty()) {
+        if(ourSensor == null) {
             Toast.makeText(this@MainActivity, "Nie znaleziono czujnika! Upewnij się, że sparowałeś urządzenie!", Toast.LENGTH_SHORT).show()
         }
 
@@ -179,35 +199,56 @@ class MainActivity : AppCompatActivity() {
 
     inner class ConnectToDevice(mainActivity: MainActivity) : AsyncTask<String,Void,Void>() {
 
-        override fun onPreExecute() {
-            super.onPreExecute()
-        }
+//        override fun onPreExecute() {
+//            super.onPreExecute()
+//        }
 
         @SuppressLint("MissingPermission")
         override fun doInBackground(vararg p0: String?): Void? {
             try {
                 if (bluetoothSocket == null || !isConnected) {
+                    println("halo")
                     bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
                     val device: BluetoothDevice = bluetoothAdapter.getRemoteDevice(address)
-                    bluetoothSocket = device.createInsecureRfcommSocketToServiceRecord(sensorUUID)
+                    val id = device.getUuids()
+                    bluetoothSocket = device.createInsecureRfcommSocketToServiceRecord(UUID.fromString(id[0].toString()))
                     BluetoothAdapter.getDefaultAdapter().cancelDiscovery()
                     bluetoothSocket!!.connect()
-                    actionReference.text = "Udało się połączyć z urządzeniem."
+                    if (bluetoothSocket!!.isConnected){
+                        isConnected = true
+                    } else {
+//326451
+                    }
+                    this@MainActivity.runOnUiThread(java.lang.Runnable {
+                        findViewById<TextView>(R.id.statusText).text="Połączenie z urządzeniem: połączono"
+                        findViewById<TextView>(R.id.actionReference).text="Kliknij przycisk kalibracji."
+                        findViewById<ToggleButton>(R.id.sensorCalibrate).isEnabled=true
+                    })
+
+                    //.text = "Udało się połączyć z urządzeniem."
                 }
             } catch (e: IOException) {
-                connectSuccess = false
+                //connectSuccess = false
+                isConnected = false
+                if (bluetoothSocket != null) {
+                    bluetoothSocket!!.close()
+                }
                 e.printStackTrace()
+                this@MainActivity.runOnUiThread(java.lang.Runnable {
+                    Toast.makeText(this@MainActivity, "Nie udało się połączyć!", Toast.LENGTH_SHORT)
+                        .show()
+                })
             }
             return null
         }
 
-        override fun onProgressUpdate(vararg values: Void?) {
-            super.onProgressUpdate(*values)
-        }
-
-        override fun onCancelled() {
-            super.onCancelled()
-        }
+//        override fun onProgressUpdate(vararg values: Void?) {
+//            super.onProgressUpdate(*values)
+//        }
+//
+//        override fun onCancelled() {
+//            super.onCancelled()
+//        }
     }
 
 }

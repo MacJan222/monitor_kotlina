@@ -39,6 +39,7 @@
         android:text="Skalibruj"
         android:textOff="Kliknij, żeby zacząć kalibrację"
         android:textOn="Zakończ kalibrację"
+        android:enabled="false"
         app:layout_constraintEnd_toStartOf="@+id/btnBluetooth"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/actionReference" />

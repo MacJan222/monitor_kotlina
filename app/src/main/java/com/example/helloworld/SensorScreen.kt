@@ -3,6 +3,7 @@ package com.example.helloworld
 import android.app.Activity
 import android.graphics.Color
 import android.os.Bundle
+import android.view.WindowManager
 import android.widget.TextView
 import com.androidplot.xy.BoundaryMode
 import com.androidplot.xy.LineAndPointFormatter
@@ -10,13 +11,15 @@ import com.androidplot.xy.SimpleXYSeries
 import com.androidplot.xy.XYSeries
 import kotlinx.android.synthetic.main.sensor_screen.*
 import org.w3c.dom.Text
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
 class SensorScreen : Activity() {
-    val DISPLAY = 200
+    val DISPLAY = 100
 
     val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     val date = Date()
@@ -25,7 +28,7 @@ class SensorScreen : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.sensor_screen)
-
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         //lateinit var randomDataText = findViewById<TextView>(R.id.randomDataTextView)
 
         val minMaxValues=intent.getStringExtra("minMax")
@@ -67,7 +70,7 @@ class SensorScreen : Activity() {
 
     var timer = Timer()
     var rnd = 0.0F
-    var arr: ArrayList<Float> = arrayListOf()
+    var arr: MutableList<Float> = mutableListOf()
     val calibrationTime = DISPLAY
 
 
@@ -76,6 +79,7 @@ class SensorScreen : Activity() {
         override fun run() {
             //setContentView(R.layout.sensor_screen)
             rnd=randomNumber()
+            println(arr)
             File(current).appendText(rnd.toString()+"\n")
             //findViewById<TextView>(R.id.randomDataTextView).text=rnd.toString()
             this@SensorScreen.runOnUiThread(java.lang.Runnable {
@@ -89,7 +93,12 @@ class SensorScreen : Activity() {
             if(arr.size>calibrationTime){
                 arr.removeAt(0)
             }
-            arr+=rnd
+            if(rnd == 0.0F && arr.isNotEmpty()){
+                arr.add(arr.last())
+            } else {
+                arr.add(rnd)
+            }
+
             //println(arr.size)
             //println(arr)
         }
@@ -108,6 +117,7 @@ class SensorScreen : Activity() {
             override fun run() {
                 //setContentView(R.layout.sensor_screen)
                 rnd=randomNumber()
+                println(rnd)
                 //findViewById<TextView>(R.id.randomDataTextView).text=rnd.toString()
                 this@SensorScreen.runOnUiThread(java.lang.Runnable {
                     findViewById<TextView>(R.id.randomDataTextView).text=rnd.toString()
@@ -120,7 +130,11 @@ class SensorScreen : Activity() {
                 if(arr.size>calibrationTime){
                     arr.removeAt(0)
                 }
-                arr+=rnd
+                if(rnd == 0.0F && arr.isNotEmpty()){
+                    arr.add(arr.last())
+                } else {
+                    arr.add(rnd)
+                }
                 //println(arr.size)
                 //println(arr)
             }
@@ -129,7 +143,21 @@ class SensorScreen : Activity() {
     }
 
     fun randomNumber(): Float {
-        return Random().nextFloat() * (600 - 100) + 100
+
+        val input = BufferedReader(InputStreamReader(MainActivity.bluetoothSocket!!.getInputStream()))
+        val rawData = input.readLine()
+
+        var data = emptyList<String>()
+        if(rawData.isNotEmpty()){
+            data = rawData.split(" ")
+        }
+
+        var correctData = 0.0F
+
+        if(data.size == 4 && data[0].isNotEmpty()) {
+            correctData = data[0].toFloat()
+        }
+        return correctData
     }
 
     fun getMinMax(): Pair<Float, Float> {

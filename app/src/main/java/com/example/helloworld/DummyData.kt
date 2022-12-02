@@ -1,24 +1,37 @@
 package com.example.helloworld
 
+import android.bluetooth.BluetoothSocket
 import kotlinx.android.synthetic.main.activity_main.*
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.util.*
 import kotlin.collections.ArrayList
 
-class DummyData {
+class DummyData() {
 
     var timer = Timer()
-    var rnd = 0.0F
+    //var rnd = 0.0F
     var arr: ArrayList<Float> = arrayListOf()
     val calibrationTime = 100
 
     var monitor = object : TimerTask() {
         override fun run() {
-            rnd=randomNumber()
+
+            val input = BufferedReader(InputStreamReader(MainActivity.bluetoothSocket!!.getInputStream()))
+            val rawData = input.readLine()
             if(arr.size>calibrationTime){
                 arr.removeAt(0)
             }
-            arr+=rnd
-            //println(arr.size)
+
+            var data = emptyList<String>()
+            if(rawData.isNotEmpty()){
+                data = rawData.split(" ")
+            }
+
+            if(data.size == 4 && data[0].isNotEmpty()) {
+                arr+=data[0].toFloat()
+            }
+            println(arr.size)
         }
     }
 
@@ -33,19 +46,30 @@ class DummyData {
 
         monitor = object : TimerTask() {
             override fun run() {
-                rnd=randomNumber()
+
+                val input = BufferedReader(InputStreamReader(MainActivity.bluetoothSocket!!.getInputStream()))
+                val rawData = input.readLine()
                 if(arr.size>calibrationTime){
                     arr.removeAt(0)
                 }
-                arr+=rnd
-                //println(arr.size)
+
+                var data = emptyList<String>()
+                if(rawData.isNotEmpty()){
+                    data = rawData.split(" ")
+                }
+
+                if(data.size == 4 && data[0].isNotEmpty()) {
+                    arr+=data[0].toFloat()
+                }
+                println(arr.size)
             }
         }
+
         timer=Timer()
     }
 
-    fun randomNumber(): Float {
-        return Random().nextFloat() * (600 - 100) + 100
+    fun resetData() {
+        arr = arrayListOf()
     }
 
     fun getMinMax(): Pair<Float, Float> {
@@ -53,3 +77,4 @@ class DummyData {
     }
 
 }
+
