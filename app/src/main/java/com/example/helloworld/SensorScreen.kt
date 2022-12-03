@@ -5,12 +5,10 @@ import android.graphics.Color
 import android.os.Bundle
 import android.view.WindowManager
 import android.widget.TextView
-import com.androidplot.xy.BoundaryMode
-import com.androidplot.xy.LineAndPointFormatter
-import com.androidplot.xy.SimpleXYSeries
-import com.androidplot.xy.XYSeries
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
 import kotlinx.android.synthetic.main.sensor_screen.*
-import org.w3c.dom.Text
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
@@ -25,22 +23,40 @@ class SensorScreen : Activity() {
     val date = Date()
     var current = ""
 
+    lateinit var lineList: ArrayList<Entry>
+    lateinit var lineDataSet: LineDataSet
+    lateinit var lineData: LineData
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.sensor_screen)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        //lateinit var randomDataText = findViewById<TextView>(R.id.randomDataTextView)
+
+        lineList = ArrayList()
+        lineDataSet = LineDataSet(lineList, "Dane z czujnika")
+        lineDataSet.setDrawCircles(false)
+        lineDataSet.setDrawValues(false)
+        lineDataSet.setDrawHighlightIndicators(false)
+        lineDataSet.color = Color.BLUE
+        lineData = LineData(lineDataSet)
+        sensorPlot.xAxis.setDrawGridLines(false)
+        sensorPlot.axisLeft.setDrawGridLines(false)
+        sensorPlot.axisRight.setEnabled(false)
+        sensorPlot.axisLeft.labelPosition
+        sensorPlot.axisRight.setDrawGridLines(false)
+        sensorPlot.description.setEnabled(false)
+        sensorPlot.xAxis.setDrawLabels(false)
+        //sensorPlot.setViewPortOffsets(0f, 0f, 0f, 0f)
+        sensorPlot.setVisibleXRangeMaximum(200F) //moze niepotrzebne
+        sensorPlot.data = lineData
 
         val minMaxValues=intent.getStringExtra("minMax")
         minMaxTextView.text=minMaxValues
 
-        //BOUNDARIES DLA X
-        sensorPlot.setDomainBoundaries(0, BoundaryMode.FIXED,DISPLAY,BoundaryMode.FIXED)
-
         //var sensorData: ArrayList<Float> = arrayListOf()
 
         btnStart.setOnClickListener {
-            sensorPlot.clear()
+//            sensorPlot.clear()
             btnStart.isEnabled = false
             startRandomData()
             val dirPath = baseContext.getExternalFilesDir(null).toString().removeSuffix("files")
@@ -64,16 +80,13 @@ class SensorScreen : Activity() {
         stopRandomData()
     }
 
-    //WYKRES
-    //val seriesFormat = LineAndPointFormatter(Color.BLUE, Color.BLACK,null,null)
-
 
     var timer = Timer()
     var rnd = 0.0F
     var arr: MutableList<Float> = mutableListOf()
     val calibrationTime = DISPLAY
 
-
+    var i = 0
 
     var monitor = object : TimerTask() {
         override fun run() {
@@ -82,22 +95,28 @@ class SensorScreen : Activity() {
             println(arr)
             File(current).appendText(rnd.toString()+"\n")
             //findViewById<TextView>(R.id.randomDataTextView).text=rnd.toString()
-            this@SensorScreen.runOnUiThread(java.lang.Runnable {
-                findViewById<TextView>(R.id.randomDataTextView).text=rnd.toString()
-                val seriesFormat = LineAndPointFormatter(Color.BLUE, Color.BLACK,null,null)
-                val series: XYSeries = SimpleXYSeries(arr, SimpleXYSeries.ArrayFormat.Y_VALS_ONLY, "")
-                findViewById<com.androidplot.xy.XYPlot>(R.id.sensorPlot).clear()
-                findViewById<com.androidplot.xy.XYPlot>(R.id.sensorPlot).addSeries(series,seriesFormat)
-                findViewById<com.androidplot.xy.XYPlot>(R.id.sensorPlot).redraw()
-            })
+            this@SensorScreen.runOnUiThread {
+                findViewById<TextView>(R.id.randomDataTextView).text = rnd.toString()
+                if (arr.size > calibrationTime) {
+                    lineDataSet.removeFirst()
+                }
+                if(rnd <= 20.0F && arr.isNotEmpty()) { lineDataSet.addEntry(Entry(i.toFloat(), arr.last())) }
+                else { lineDataSet.addEntry(Entry(i.toFloat(), rnd)) }
+                lineData.notifyDataChanged()
+                sensorPlot.notifyDataSetChanged()
+                sensorPlot.invalidate()
+
+            }
             if(arr.size>calibrationTime){
                 arr.removeAt(0)
             }
-            if(rnd == 0.0F && arr.isNotEmpty()){
+            if(rnd <= 20.0F && arr.isNotEmpty()){
                 arr.add(arr.last())
             } else {
                 arr.add(rnd)
             }
+
+            i += 1
 
             //println(arr.size)
             //println(arr)
@@ -113,28 +132,38 @@ class SensorScreen : Activity() {
         monitor.cancel()
         timer.cancel()
 
+        i = 0
+
         monitor = object : TimerTask() {
             override fun run() {
                 //setContentView(R.layout.sensor_screen)
                 rnd=randomNumber()
-                println(rnd)
+                println(arr)
+                File(current).appendText(rnd.toString()+"\n")
                 //findViewById<TextView>(R.id.randomDataTextView).text=rnd.toString()
-                this@SensorScreen.runOnUiThread(java.lang.Runnable {
-                    findViewById<TextView>(R.id.randomDataTextView).text=rnd.toString()
-                    val seriesFormat = LineAndPointFormatter(Color.BLUE, Color.BLACK,null,null)
-                    val series: XYSeries = SimpleXYSeries(arr, SimpleXYSeries.ArrayFormat.Y_VALS_ONLY, "")
-                    findViewById<com.androidplot.xy.XYPlot>(R.id.sensorPlot).clear()
-                    findViewById<com.androidplot.xy.XYPlot>(R.id.sensorPlot).addSeries(series,seriesFormat)
-                    findViewById<com.androidplot.xy.XYPlot>(R.id.sensorPlot).redraw()
-                })
+                this@SensorScreen.runOnUiThread {
+                    findViewById<TextView>(R.id.randomDataTextView).text = rnd.toString()
+                    if (arr.size > calibrationTime) {
+                        lineDataSet.removeFirst()
+                    }
+                    if(rnd <= 20.0F && arr.isNotEmpty()) { lineDataSet.addEntry(Entry(i.toFloat(), arr.last())) }
+                    else { lineDataSet.addEntry(Entry(i.toFloat(), rnd)) }
+                    lineData.notifyDataChanged()
+                    sensorPlot.notifyDataSetChanged()
+                    sensorPlot.invalidate()
+
+                }
                 if(arr.size>calibrationTime){
                     arr.removeAt(0)
                 }
-                if(rnd == 0.0F && arr.isNotEmpty()){
+                if(rnd <= 20.0F && arr.isNotEmpty()){
                     arr.add(arr.last())
                 } else {
                     arr.add(rnd)
                 }
+
+                i += 1
+
                 //println(arr.size)
                 //println(arr)
             }

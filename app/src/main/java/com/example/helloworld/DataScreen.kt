@@ -10,6 +10,10 @@ import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.motion.widget.Debug.getState
 import com.androidplot.xy.*
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.utils.ColorTemplate
 import kotlinx.android.synthetic.main.data_screen.*
 import java.io.File
 import java.io.InputStream
@@ -20,15 +24,33 @@ import java.text.ParsePosition
 
 
 class DataScreen : Activity() {
+
+    lateinit var lineList: ArrayList<Entry>
+    lateinit var lineDataSet: LineDataSet
+    lateinit var lineData: LineData
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.data_screen)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        // TO JEST ZOOM I PAN aka przesuwanie i przyblizanie wykresu
-        PanZoom.attach(dataPlot)
+
+        lineList = ArrayList()
+        lineList.add(Entry(10f, 100f))
+        lineList.add(Entry(20f, 200f))
+        lineList.add(Entry(30f, 400f))
+        lineList.add(Entry(40f, 600f))
+        lineList.add(Entry(50f, 200f))
+        lineList.add(Entry(60f, 300f))
+        lineList.add(Entry(70f, 500f))
+
+        lineDataSet = LineDataSet(lineList, "Count")
+        lineData = LineData(lineDataSet)
+        lcChart.data = lineData
+        lineDataSet.setColors(*ColorTemplate.JOYFUL_COLORS)
+        lineDataSet.valueTextColor = Color.BLUE
+        lineDataSet.valueTextSize = 20f
 
         btnDataPlot.setOnClickListener{
-            dataPlot.clear()
             //PanZoom.attach(dataPlot).zoom = null
             //var dataPlotPanZoom = PanZoom.attach(dataPlot)
             val intent = Intent()
@@ -40,8 +62,6 @@ class DataScreen : Activity() {
 
             startActivityForResult(Intent.createChooser(intent, "Select a file"), 777)
         }
-
-
     }
 
 
@@ -58,27 +78,7 @@ class DataScreen : Activity() {
             //var values: ArrayList<Float> = arrayListOf()
             val values = getTextContent(selectedFilePath).split("\r?\n|\r".toRegex()).dropLast(1).map {it.toFloat()}
             //println("AAA"+values)
-            val seriesFormat = LineAndPointFormatter(Color.BLUE, Color.BLACK,null,null)
-            val series: XYSeries = SimpleXYSeries(values, SimpleXYSeries.ArrayFormat.Y_VALS_ONLY, "")
-            dataPlot.addSeries(series,seriesFormat)
-            dataPlot.redraw()
 
-            dataPlot.graph.getLineLabelStyle(XYGraphWidget.Edge.BOTTOM).format = object : Format() {
-                override fun format(
-                    obj: Any?,
-                    toAppendTo: StringBuffer,
-                    pos: FieldPosition
-                ) : StringBuffer {
-                    val i = Math.round((obj as Number).toFloat())
-                    return toAppendTo.append(values[i])
-                }
-
-                override fun parseObject(p0: String?, p1: ParsePosition?): Any? {
-                    return null
-                }
-
-
-            }
 
         }
     }

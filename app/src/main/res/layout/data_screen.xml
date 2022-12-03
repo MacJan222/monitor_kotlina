@@ -5,16 +5,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.androidplot.xy.XYPlot
-        android:id="@+id/dataPlot"
-        android:layout_width="0dp"
-        android:layout_height="229dp"
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/lcChart"
         style="@style/APDefacto.Light"
-        app:title="Dane"
-        app:rangeTitle="range"
+        android:layout_width="452dp"
+        android:layout_height="450dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:rangeTitle="range"
+        app:title="Dane" />
 
     <Button
         android:id="@+id/btnDataPlot"
@@ -24,7 +24,7 @@
         android:text="Odtwórz dane"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dataPlot" />
+        app:layout_constraintTop_toBottomOf="@+id/lcChart" />
 
     <TextView
         android:id="@+id/pathToFile"
