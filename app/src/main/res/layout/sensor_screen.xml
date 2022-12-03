@@ -5,13 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.androidplot.xy.XYPlot
+    <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/sensorPlot"
         android:layout_width="0dp"
         android:layout_height="229dp"
-        style="@style/APDefacto.Light"
-        app:title="Dane"
-        app:rangeTitle="range"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

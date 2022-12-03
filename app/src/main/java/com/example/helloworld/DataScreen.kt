@@ -6,7 +6,6 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.motion.widget.Debug.getState
 import com.androidplot.xy.*
@@ -23,7 +22,7 @@ class DataScreen : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.data_screen)
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
         // TO JEST ZOOM I PAN aka przesuwanie i przyblizanie wykresu
         PanZoom.attach(dataPlot)
 
