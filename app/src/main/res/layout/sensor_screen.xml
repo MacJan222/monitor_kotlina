@@ -6,7 +6,7 @@
     android:layout_height="match_parent">
 
 
-    <com.github.mikephil.charting.charts.LineChart
+    <com.github.mikephil.charting.charts.CombinedChart
         android:id="@+id/sensorPlot"
         android:layout_width="412dp"
         android:layout_height="510dp"

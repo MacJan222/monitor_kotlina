@@ -34,10 +34,10 @@ class FilteringLPF(
 ) {
     private var filteredData: MutableList<Float> = MutableList(this.displayLength) { 0.toFloat() }
     private var unfilteredChunk: MutableList<Int> = MutableList(this.filterLength) { 0 }
-    private var peakIndexesTop: MutableList<Int> = mutableListOf()
-    private var peakIndexesBot: MutableList<Int> = mutableListOf()
-    private var peakValuesTop: MutableList<Float> = mutableListOf()
-    private var peakValuesBot: MutableList<Float> = mutableListOf()
+    var peakIndexesTop: MutableList<Int> = mutableListOf()
+    var peakIndexesBot: MutableList<Int> = mutableListOf()
+    var peakValuesTop: MutableList<Float> = mutableListOf()
+    var peakValuesBot: MutableList<Float> = mutableListOf()
     private var filter: MutableList<Float> = mutableListOf()
 
     init {
@@ -80,7 +80,7 @@ class FilteringLPF(
         for (i in lpfList.indices) { lpfList[i] = this.unfilteredChunk[i].toFloat() * this.filter[i] }
         val lpfResponse = lpfList.sum()
         this.filteredData += lpfResponse
-        println(lpfResponse)
+//        println(lpfResponse)
 
         return lpfResponse
     }
@@ -152,13 +152,13 @@ class FilteringLPF(
 
         // remove peaks with negative indexes
         if(this.peakIndexesTop.size > 0) {
-            if(this.peakIndexesTop[0] < 0) {
+            if(this.peakIndexesTop[0] < filterLength) {
                 this.peakIndexesTop.removeAt(0)
                 this.peakValuesTop.removeAt(0)
             }
         }
         if(this.peakIndexesBot.size > 0) {
-            if(this.peakIndexesBot[0] < 0) {
+            if(this.peakIndexesBot[0] < filterLength) {
                 this.peakIndexesBot.removeAt(0)
                 this.peakValuesBot.removeAt(0)
             }
@@ -180,7 +180,6 @@ class FilteringLPF(
                 this.peakValuesBot.removeAt(this.peakIndexesBot.size - 1)
             }
         }
-
         return
     }
 

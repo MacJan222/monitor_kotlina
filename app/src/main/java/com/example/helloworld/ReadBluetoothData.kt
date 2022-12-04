@@ -20,7 +20,7 @@ fun readBluetoothData(last_sample: Float): Float? {
 
     if (data != null) {
 //        if((data > 80.0F) && (abs(data - last_sample) < 80.0F)) {
-        if(data > 80.0F) {
+        if(data > 100.0F) {
                 correctData = data
             }
     }

@@ -95,7 +95,13 @@ class DummyData {
     }
 
     fun getMinMax(): Pair<Float, Float> {
-        return Pair(arr.min(),arr.max())
+        val sliced_arr = arr.slice(arr.size - 41 until arr.size)
+
+        return if(sliced_arr.min() < 80) {
+            Pair(80.0F, sliced_arr.max())
+        } else {
+            Pair(sliced_arr.min(), sliced_arr.max())
+        }
     }
 
 }
