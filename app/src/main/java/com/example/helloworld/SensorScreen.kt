@@ -9,28 +9,44 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import kotlinx.android.synthetic.main.sensor_screen.*
-import java.io.BufferedReader
 import java.io.File
-import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
 class SensorScreen : Activity() {
-    val DISPLAY = 100
+    val DISPLAY = 300  // 15 seconds with 20Hz sampling
 
     val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     val date = Date()
-    var current = ""
+    var current1 = ""
+    var current2 = ""
+
+    val lpf = FilteringLPF(41, 20, 5, 1200,
+        10, 1200, 6)
 
     lateinit var lineList: ArrayList<Entry>
     lateinit var lineDataSet: LineDataSet
     lateinit var lineData: LineData
+    var minMaxString: String? = null
+    var minMaxData: List<String>? = null
+    var minData: Float? = null
+    var maxData: Float? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.sensor_screen)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
+        minMaxString = intent.getStringExtra("minMax")
+
+        minMaxString = minMaxString!!.replace("(", "")
+        minMaxString = minMaxString!!.replace(")", "")
+
+        minMaxData = minMaxString!!.split(",")
+        minData = minMaxData!![0].toFloat() - 50.0F
+        maxData = minMaxData!![1].toFloat() + 50.0F
+        minMaxTextView.text=minMaxString
 
         lineList = ArrayList()
         lineDataSet = LineDataSet(lineList, "Dane z czujnika")
@@ -46,12 +62,16 @@ class SensorScreen : Activity() {
         sensorPlot.axisRight.setDrawGridLines(false)
         sensorPlot.description.setEnabled(false)
         sensorPlot.xAxis.setDrawLabels(false)
+        sensorPlot.axisLeft.isInverted = true
         //sensorPlot.setViewPortOffsets(0f, 0f, 0f, 0f)
-        sensorPlot.setVisibleXRangeMaximum(200F) //moze niepotrzebne
+//        sensorPlot.setVisibleXRangeMaximum(200F) //moze niepotrzebne
+        sensorPlot.axisLeft.axisMinimum = this.minData!!
+        sensorPlot.axisLeft.axisMaximum = this.maxData!!
         sensorPlot.data = lineData
 
-        val minMaxValues=intent.getStringExtra("minMax")
-        minMaxTextView.text=minMaxValues
+
+
+
 
         //var sensorData: ArrayList<Float> = arrayListOf()
 
@@ -60,7 +80,8 @@ class SensorScreen : Activity() {
             btnStart.isEnabled = false
             startRandomData()
             val dirPath = baseContext.getExternalFilesDir(null).toString().removeSuffix("files")
-            current = dirPath + formatter.format(date) + ".txt"
+            current1 = dirPath + formatter.format(date) + "_raw.txt"
+            current2 = dirPath + formatter.format(date) + "_filtered.txt"
             //minMaxTextView.text = baseContext.getExternalFilesDir(null).toString()
         }
 
@@ -82,26 +103,36 @@ class SensorScreen : Activity() {
 
 
     var timer = Timer()
-    var rnd = 0.0F
-    var arr: MutableList<Float> = mutableListOf()
+    var rnd: Float? = null
+    var arr: MutableList<Float?> = mutableListOf()
     val calibrationTime = DISPLAY
 
     var i = 0
+    var last_sample = 300.0F
 
     var monitor = object : TimerTask() {
         override fun run() {
-            //setContentView(R.layout.sensor_screen)
-            rnd=randomNumber()
+
+            rnd = readBluetoothData(last_sample = last_sample)
             println(arr)
-            File(current).appendText(rnd.toString()+"\n")
-            //findViewById<TextView>(R.id.randomDataTextView).text=rnd.toString()
+
             this@SensorScreen.runOnUiThread {
                 findViewById<TextView>(R.id.randomDataTextView).text = rnd.toString()
                 if (arr.size > calibrationTime) {
                     lineDataSet.removeFirst()
                 }
-                if(rnd <= 20.0F && arr.isNotEmpty()) { lineDataSet.addEntry(Entry(i.toFloat(), arr.last())) }
-                else { lineDataSet.addEntry(Entry(i.toFloat(), rnd)) }
+
+                if(arr.isNotEmpty()) {
+                    if (rnd == null) {
+                        rnd = arr.last()
+                    }
+                    File(current1).appendText(rnd.toString()+"\n")
+                    rnd = lpf.processLPF(rnd!!.toInt())
+                    File(current2).appendText(rnd.toString()+"\n")
+                    lpf.peakDetection()
+                    lineDataSet.addEntry(Entry(i.toFloat(), rnd!!))
+                }
+
                 lineData.notifyDataChanged()
                 sensorPlot.notifyDataSetChanged()
                 sensorPlot.invalidate()
@@ -110,10 +141,21 @@ class SensorScreen : Activity() {
             if(arr.size>calibrationTime){
                 arr.removeAt(0)
             }
-            if(rnd <= 20.0F && arr.isNotEmpty()){
-                arr.add(arr.last())
-            } else {
-                arr.add(rnd)
+
+            if (arr.isEmpty()) {
+                if (rnd == null) {
+                    arr.add(minData!!)
+                } else {
+                    arr.add(rnd)
+                }
+            }
+            else {
+                if (rnd == null) {
+                    arr.add(arr.last())
+                }
+                else {
+                    arr.add(rnd)
+                }
             }
 
             i += 1
@@ -136,18 +178,27 @@ class SensorScreen : Activity() {
 
         monitor = object : TimerTask() {
             override fun run() {
-                //setContentView(R.layout.sensor_screen)
-                rnd=randomNumber()
+
+                rnd = readBluetoothData(last_sample = last_sample)
                 println(arr)
-                File(current).appendText(rnd.toString()+"\n")
-                //findViewById<TextView>(R.id.randomDataTextView).text=rnd.toString()
+
                 this@SensorScreen.runOnUiThread {
                     findViewById<TextView>(R.id.randomDataTextView).text = rnd.toString()
                     if (arr.size > calibrationTime) {
                         lineDataSet.removeFirst()
                     }
-                    if(rnd <= 20.0F && arr.isNotEmpty()) { lineDataSet.addEntry(Entry(i.toFloat(), arr.last())) }
-                    else { lineDataSet.addEntry(Entry(i.toFloat(), rnd)) }
+
+                    if(arr.isNotEmpty()) {
+                        if (rnd == null) {
+                            rnd = arr.last()
+                        }
+                        File(current1).appendText(rnd.toString()+"\n")
+                        rnd = lpf.processLPF(rnd!!.toInt())
+                        File(current2).appendText(rnd.toString()+"\n")
+                        lpf.peakDetection()
+                        lineDataSet.addEntry(Entry(i.toFloat(), rnd!!))
+                    }
+
                     lineData.notifyDataChanged()
                     sensorPlot.notifyDataSetChanged()
                     sensorPlot.invalidate()
@@ -156,10 +207,21 @@ class SensorScreen : Activity() {
                 if(arr.size>calibrationTime){
                     arr.removeAt(0)
                 }
-                if(rnd <= 20.0F && arr.isNotEmpty()){
-                    arr.add(arr.last())
-                } else {
-                    arr.add(rnd)
+
+                if (arr.isEmpty()) {
+                    if (rnd == null) {
+                        arr.add(minData!!)
+                    } else {
+                        arr.add(rnd)
+                    }
+                }
+                else {
+                    if (rnd == null) {
+                        arr.add(arr.last())
+                    }
+                    else {
+                        arr.add(rnd)
+                    }
                 }
 
                 i += 1
@@ -171,26 +233,10 @@ class SensorScreen : Activity() {
         timer=Timer()
     }
 
-    fun randomNumber(): Float {
 
-        val input = BufferedReader(InputStreamReader(MainActivity.bluetoothSocket!!.getInputStream()))
-        val rawData = input.readLine()
 
-        var data = emptyList<String>()
-        if(rawData.isNotEmpty()){
-            data = rawData.split(" ")
-        }
-
-        var correctData = 0.0F
-
-        if(data.size == 4 && data[0].isNotEmpty()) {
-            correctData = data[0].toFloat()
-        }
-        return correctData
-    }
-
-    fun getMinMax(): Pair<Float, Float> {
-        return Pair(arr.min(),arr.max())
-    }
+//    fun getMinMax(): Pair<Float, Float> {
+//        return Pair(arr.min(),arr.max())
+//    }
 
 }

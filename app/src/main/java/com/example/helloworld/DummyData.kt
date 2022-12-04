@@ -1,37 +1,44 @@
 package com.example.helloworld
 
-import android.bluetooth.BluetoothSocket
-import kotlinx.android.synthetic.main.activity_main.*
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.*
 import kotlin.collections.ArrayList
 
-class DummyData() {
+class DummyData {
 
     var timer = Timer()
-    //var rnd = 0.0F
+    var singleData: Float? = 0.0F
     var arr: ArrayList<Float> = arrayListOf()
-    val calibrationTime = 100
+    val calibrationTime = 1200
+    var last_sample = 300.0F
+
+    val lpfCalibration = FilteringLPF(41, 20, 5, 1200,
+        10, 1200, 6)
 
     var monitor = object : TimerTask() {
         override fun run() {
+            singleData = readBluetoothData(last_sample = last_sample)
 
-            val input = BufferedReader(InputStreamReader(MainActivity.bluetoothSocket!!.getInputStream()))
-            val rawData = input.readLine()
-            if(arr.size>calibrationTime){
-                arr.removeAt(0)
+            if(arr.isNotEmpty() && singleData != null) {
+                singleData = lpfCalibration.processLPF(singleData!!.toInt())
             }
 
-            var data = emptyList<String>()
-            if(rawData.isNotEmpty()){
-                data = rawData.split(" ")
+            if(arr.size > calibrationTime){ arr.removeAt(0) }
+
+            if(arr.isNotEmpty()) {
+                if (singleData == null) {
+                    arr.add(arr.last())
+                } else {
+                    arr.add(singleData!!)
+                }
+            }
+            else {
+
+                arr.add(300.0F)  // UWAGA HARDKODOWANE TODO: POPRAWIC
             }
 
-            if(data.size == 4 && data[0].isNotEmpty()) {
-                arr+=data[0].toFloat()
-            }
-            println(arr.size)
+            println(arr)
         }
     }
 
@@ -46,22 +53,37 @@ class DummyData() {
 
         monitor = object : TimerTask() {
             override fun run() {
+                singleData = readBluetoothData(last_sample = last_sample)
 
-                val input = BufferedReader(InputStreamReader(MainActivity.bluetoothSocket!!.getInputStream()))
-                val rawData = input.readLine()
-                if(arr.size>calibrationTime){
-                    arr.removeAt(0)
+                if(arr.isNotEmpty() && singleData != null) {
+                    singleData = lpfCalibration.processLPF(singleData!!.toInt())
                 }
 
-                var data = emptyList<String>()
-                if(rawData.isNotEmpty()){
-                    data = rawData.split(" ")
+                if(arr.size > calibrationTime){ arr.removeAt(0) }
+
+                if(arr.isNotEmpty()) {
+                    if (singleData == null) {
+                        arr.add(arr.last())
+                    } else {
+                        arr.add(singleData!!)
+                    }
+                }
+                else {
+                    arr.add(300.0F)  // UWAGA HARDKODOWANE TODO: POPRAWIC
                 }
 
-                if(data.size == 4 && data[0].isNotEmpty()) {
-                    arr+=data[0].toFloat()
+                println(arr)
+                if (singleData == null) {
+                    if(arr.isNotEmpty()) {
+                        last_sample = arr.last()
+                    }
+                    else {
+                        last_sample = 300.0F
+                    }
+                } else {
+                    last_sample = singleData!!
                 }
-                println(arr.size)
+
             }
         }
 

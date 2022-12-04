@@ -76,21 +76,7 @@ class MainActivity : AppCompatActivity() {
                     ConnectToDevice(this@MainActivity).execute()
                 }
             }
-//            if(bluetoothAdapter == null){
-//                Toast.makeText(this@MainActivity, "Urządzenie nie obsługuje bluetooth!", Toast.LENGTH_SHORT).show()
-//            }
-//            else
-//            {
-//                if(bluetoothAdapter?.isEnabled == false)
-//                {
-//                    bluetoothAdapter.enable()
-//                }
-//                else
-//                {
-//                    Toast.makeText(this@MainActivity, "Bluetooth już włączone!", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//            getPairedDevice()
+
 
         }
 
@@ -103,22 +89,6 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra("minMax",minMax.toString())
             startActivity(intent)
         }
-
-//        sensorCalibrate.setOnCheckedChangeListener{
-//            _,isChecked-> if(isChecked) {
-//                dummyData.startRandomData()
-//        } else {
-//            dummyData.stopRandomData()
-//            //statusText.text = dummyData.getMinMax().toString()
-//            minMax = dummyData.getMinMax()
-//            btnSensor.isEnabled = true
-//            actionReference.text = "Skalibrowano urządzenie. Wartość minimalna: " + minMax.first.toString() + " Wartość maksymalna: " + minMax.second.toString()
-//            dummyData.arr=arrayListOf()
-//        }
-//
-//        }
-
-
 
         sensorCalibrate.setOnCheckedChangeListener{
                 _,isChecked-> if(isChecked) {
