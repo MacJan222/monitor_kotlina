@@ -109,12 +109,19 @@ class SensorScreen : Activity() {
 
     var i = 0
     var last_sample = 300.0F
+    var tmp = 300.0F
 
     var monitor = object : TimerTask() {
         override fun run() {
 
             rnd = readBluetoothData(last_sample = last_sample)
             println(arr)
+
+//            if(i == 41) {
+//                tmp = arr.last()!!  // warning not safe
+//                arr.clear()
+//                arr.add(tmp)
+//            }
 
             this@SensorScreen.runOnUiThread {
                 findViewById<TextView>(R.id.randomDataTextView).text = rnd.toString()
@@ -130,13 +137,14 @@ class SensorScreen : Activity() {
                     rnd = lpf.processLPF(rnd!!.toInt())
                     File(current2).appendText(rnd.toString()+"\n")
                     lpf.peakDetection()
-                    lineDataSet.addEntry(Entry(i.toFloat(), rnd!!))
+                    if(i > 41) {
+                        lineDataSet.addEntry(Entry(i.toFloat(), rnd!!))
+                    }
                 }
 
                 lineData.notifyDataChanged()
                 sensorPlot.notifyDataSetChanged()
                 sensorPlot.invalidate()
-
             }
             if(arr.size>calibrationTime){
                 arr.removeAt(0)
@@ -182,6 +190,12 @@ class SensorScreen : Activity() {
                 rnd = readBluetoothData(last_sample = last_sample)
                 println(arr)
 
+//                if(i == 41) {
+//                    tmp = arr.last()!!  // warning not safe
+//                    arr.clear()
+//                    arr.add(tmp)
+//                }
+
                 this@SensorScreen.runOnUiThread {
                     findViewById<TextView>(R.id.randomDataTextView).text = rnd.toString()
                     if (arr.size > calibrationTime) {
@@ -195,15 +209,17 @@ class SensorScreen : Activity() {
                         File(current1).appendText(rnd.toString()+"\n")
                         rnd = lpf.processLPF(rnd!!.toInt())
                         File(current2).appendText(rnd.toString()+"\n")
-                        lpf.peakDetection()
-                        lineDataSet.addEntry(Entry(i.toFloat(), rnd!!))
+                        if(i > 41) {
+                            lpf.peakDetection()
+                            lineDataSet.addEntry(Entry(i.toFloat(), rnd!!))
+                        }
                     }
 
                     lineData.notifyDataChanged()
                     sensorPlot.notifyDataSetChanged()
                     sensorPlot.invalidate()
-
                 }
+
                 if(arr.size>calibrationTime){
                     arr.removeAt(0)
                 }
