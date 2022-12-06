@@ -1,27 +1,9 @@
 package com.example.helloworld
 
-import java.io.File
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 
-//fun testFiltering() {
-//    val text = File("C:\\Users\\Maciej\\AndroidStudioProjects\\monitor_kotlina\\app\\src\\main\\java\\com\\example\\helloworld\\2022-12-03 201911_raw.txt").readText()
-//    val textList = text.split("\n")
-//    val valueList = textList.map { it.toFloat().toInt() }
-//
-//    val lpf = FilteringLPF(121, 20, 5, 1200,
-//        10, 1200, 7)
-//
-//    for (i in valueList.indices) {
-//        println(lpf.processLPF(valueList[i]))
-//        lpf.peakDetection()
-//    }
-//}
-//
-//fun main() {
-//    testFiltering()
-//}
 
 class FilteringLPF(
     private var filterLength: Int,
@@ -32,7 +14,7 @@ class FilteringLPF(
     private val currentAcquisitionIndex: Int,
     private val peakThreshold: Int
 ) {
-    private var filteredData: MutableList<Float> = MutableList(this.displayLength) { 0.toFloat() }
+    var filteredData: MutableList<Float> = MutableList(this.displayLength) { 0.toFloat() }
     private var unfilteredChunk: MutableList<Int> = MutableList(this.filterLength) { 0 }
     var peakIndexesTop: MutableList<Int> = mutableListOf()
     var peakIndexesBot: MutableList<Int> = mutableListOf()
@@ -80,7 +62,6 @@ class FilteringLPF(
         for (i in lpfList.indices) { lpfList[i] = this.unfilteredChunk[i].toFloat() * this.filter[i] }
         val lpfResponse = lpfList.sum()
         this.filteredData += lpfResponse
-//        println(lpfResponse)
 
         return lpfResponse
     }
@@ -152,13 +133,13 @@ class FilteringLPF(
 
         // remove peaks with negative indexes
         if(this.peakIndexesTop.size > 0) {
-            if(this.peakIndexesTop[0] < filterLength) {
+            if(this.peakIndexesTop[0] < 0) {
                 this.peakIndexesTop.removeAt(0)
                 this.peakValuesTop.removeAt(0)
             }
         }
         if(this.peakIndexesBot.size > 0) {
-            if(this.peakIndexesBot[0] < filterLength) {
+            if(this.peakIndexesBot[0] < 0) {
                 this.peakIndexesBot.removeAt(0)
                 this.peakValuesBot.removeAt(0)
             }

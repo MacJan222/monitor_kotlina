@@ -100,7 +100,6 @@ class MainActivity : AppCompatActivity() {
             btnSensor.isEnabled = true
         }
         }
-
     }
 
     @RequiresApi(Build.VERSION_CODES.S)

@@ -1,107 +1,61 @@
 package com.example.helloworld
 
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.util.*
-import kotlin.collections.ArrayList
+import android.R
+import android.app.Activity
+import android.os.Handler
+import android.os.Looper
+import android.view.View
+import android.widget.ToggleButton
+import kotlinx.android.synthetic.main.activity_main.*
+
 
 class DummyData {
 
-    var timer = Timer()
-    var singleData: Float? = 0.0F
-    var arr: ArrayList<Float> = arrayListOf()
+    var calibrationData: ArrayList<Float> = arrayListOf()
     val calibrationTime = 1200
-    var last_sample = 300.0F
+    var rawBuffer = 9999.0F
+    var rawSample = 9999.0F
+    var filteredSample = 9999.0F
+    val samplingFrequency = 50
+
 
     val lpfCalibration = FilteringLPF(41, 20, 5, 1200,
         10, 1200, 6)
 
-    var monitor = object : TimerTask() {
+    val handler = Handler(Looper.getMainLooper())
+
+    val runnable = object : Runnable {
         override fun run() {
-            singleData = readBluetoothData(last_sample = last_sample)
-
-            if(arr.isNotEmpty() && singleData != null) {
-                singleData = lpfCalibration.processLPF(singleData!!.toInt())
+            if(calibrationData.size < 41) {
+                // todo: connect button to main activity
+//                (baseContext).findViewById<View>(R.id.sensorCalibrate) as ToggleButton
             }
 
-            if(arr.size > calibrationTime){ arr.removeAt(0) }
+            rawSample = readBluetoothData()
 
-            if(arr.isNotEmpty()) {
-                if (singleData == null) {
-                    arr.add(arr.last())
-                } else {
-                    arr.add(singleData!!)
-                }
-            }
-            else {
-
-                arr.add(300.0F)  // UWAGA HARDKODOWANE TODO: POPRAWIC
+            if(rawSample == 9999.0F) {
+                rawSample = rawBuffer
             }
 
-            println(arr)
+            rawBuffer = rawSample
+            filteredSample = lpfCalibration.processLPF(rawSample.toInt())
+            calibrationData += filteredSample
+
+            handler.postDelayed(this, samplingFrequency.toLong())
         }
     }
 
     fun startRandomData(){
-        timer.schedule(monitor, 50, 50)
-
+        handler.postDelayed(runnable, samplingFrequency.toLong())
     }
 
     fun stopRandomData(){
-        monitor.cancel()
-        timer.cancel()
-
-        monitor = object : TimerTask() {
-            override fun run() {
-                singleData = readBluetoothData(last_sample = last_sample)
-
-                if(arr.isNotEmpty() && singleData != null) {
-                    singleData = lpfCalibration.processLPF(singleData!!.toInt())
-                }
-
-                if(arr.size > calibrationTime){ arr.removeAt(0) }
-
-                if(arr.isNotEmpty()) {
-                    if (singleData == null) {
-                        arr.add(arr.last())
-                    } else {
-                        arr.add(singleData!!)
-                    }
-                }
-                else {
-                    arr.add(300.0F)  // UWAGA HARDKODOWANE TODO: POPRAWIC
-                }
-
-                println(arr)
-                if (singleData == null) {
-                    if(arr.isNotEmpty()) {
-                        last_sample = arr.last()
-                    }
-                    else {
-                        last_sample = 300.0F
-                    }
-                } else {
-                    last_sample = singleData!!
-                }
-
-            }
-        }
-
-        timer=Timer()
-    }
-
-    fun resetData() {
-        arr = arrayListOf()
+        handler.removeCallbacks(runnable)
     }
 
     fun getMinMax(): Pair<Float, Float> {
-        val sliced_arr = arr.slice(arr.size - 41 until arr.size)
-
-        return if(sliced_arr.min() < 80) {
-            Pair(80.0F, sliced_arr.max())
-        } else {
-            Pair(sliced_arr.min(), sliced_arr.max())
-        }
+        val slicedArr = calibrationData.slice(calibrationData.size - 41 until calibrationData.size)
+        return Pair(slicedArr.min(), slicedArr.max())
     }
 
 }

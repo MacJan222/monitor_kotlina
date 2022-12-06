@@ -4,25 +4,20 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlin.math.abs
 
-fun readBluetoothData(last_sample: Float): Float? {
+fun readBluetoothData(): Float {
 
     val input = BufferedReader(InputStreamReader(MainActivity.bluetoothSocket!!.getInputStream()))
     val rawData = input.readLine()
 
-//    var data = emptyList<String>()
-    var data: Float? = null
+    var data = 9999.0F
+    var correctData = 9999.0F
+
     if(rawData.isNotEmpty()){
-//        data = rawData.split(" ")
         data = rawData.toFloat()
     }
 
-    var correctData: Float? = null
-
-    if (data != null) {
-//        if((data > 80.0F) && (abs(data - last_sample) < 80.0F)) {
-        if(data > 100.0F) {
-                correctData = data
-            }
+    if(data > 100.0F) {
+        correctData = data
     }
     return correctData
 }
