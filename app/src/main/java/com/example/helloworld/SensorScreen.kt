@@ -18,6 +18,7 @@ import java.util.*
 
 class SensorScreen : Activity() {
     val displaySize = 300  // 15 seconds with 20Hz sampling
+    val peakSearchSize = 10
     val lpfFilterSize = 41
 
     val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
@@ -26,7 +27,7 @@ class SensorScreen : Activity() {
     var current2 = ""
 
     val lpf = FilteringLPF(lpfFilterSize, 20, 5, displaySize,
-        10, 300, 6)
+        peakSearchSize, 6)
 
     lateinit var lineList: ArrayList<Entry>
     lateinit var lineDataSet: LineDataSet
@@ -52,7 +53,7 @@ class SensorScreen : Activity() {
         val minMaxData = minMaxString!!.split(",")
         minVal = minMaxData[0].toFloat()
         maxVal = minMaxData[1].toFloat()
-        minMaxTextView.text=minMaxString
+        tvMinMax.text=minMaxString
 
         lineList = ArrayList()
         lineDataSet = LineDataSet(lineList, "Dane z czujnika")
@@ -69,16 +70,16 @@ class SensorScreen : Activity() {
         peakDataSet.color = Color.GREEN
         peakData = ScatterData(peakDataSet)
 
-        sensorPlot.xAxis.setDrawGridLines(false)
-        sensorPlot.axisLeft.setDrawGridLines(false)
-        sensorPlot.axisRight.setEnabled(false)
-        sensorPlot.axisLeft.labelPosition
-        sensorPlot.axisRight.setDrawGridLines(false)
-        sensorPlot.description.setEnabled(false)
-        sensorPlot.axisLeft.isInverted = true
-        sensorPlot.setBackgroundColor(Color.WHITE)
-        sensorPlot.axisLeft.axisMinimum = 0.0F
-        sensorPlot.axisLeft.axisMaximum = 100F
+        ccSensorPlot.xAxis.setDrawGridLines(false)
+        ccSensorPlot.axisLeft.setDrawGridLines(false)
+        ccSensorPlot.axisRight.setEnabled(false)
+        ccSensorPlot.axisLeft.labelPosition
+        ccSensorPlot.axisRight.setDrawGridLines(false)
+        ccSensorPlot.description.setEnabled(false)
+        ccSensorPlot.axisLeft.isInverted = true
+        ccSensorPlot.setBackgroundColor(Color.WHITE)
+        ccSensorPlot.axisLeft.axisMinimum = 0.0F
+        ccSensorPlot.axisLeft.axisMaximum = 100F
 
         for (i in 0 until displaySize) {
             lineDataSet.addEntry(Entry(i.toFloat(), 0.0F))
@@ -89,12 +90,12 @@ class SensorScreen : Activity() {
 
         combinedData.setData(lineData)
         combinedData.setData(peakData)
-        sensorPlot.data = combinedData
+        ccSensorPlot.data = combinedData
         lineData.notifyDataChanged()
         peakData.notifyDataChanged()
         combinedData.notifyDataChanged()
 
-        sensorPlot.invalidate()
+        ccSensorPlot.invalidate()
 
         btnStart.setOnClickListener {
             btnStart.isEnabled = false
@@ -124,6 +125,8 @@ class SensorScreen : Activity() {
     var rawBuffer = 0.0F
     var breathCount = 0
     var newEntry = 0.0F
+    var scaledSample = 0.0F
+    var is_new_peak = false
 
     val handler = Handler(Looper.getMainLooper())
 
@@ -141,23 +144,28 @@ class SensorScreen : Activity() {
             rawBuffer = rawSample
             randomDataTextView.text = rawSample.toString()
 
-            File(current1).appendText(rawSample.toString()+"\n")
             filteredSample = lpf.processLPF(rawSample.toInt())
+            scaledSample = (filteredSample - minVal) * 100 / (maxVal - minVal)
             lpf.peakDetection()
-            File(current2).appendText(filteredSample.toString()+"\n")
+
 
             for(i in 0 until lpf.filteredData.size) {
                 newEntry = (lpf.filteredData[i] - minVal) * 100 / (maxVal - minVal)
                 lineDataSet.addEntry(Entry(i.toFloat(), newEntry))
-//                lineDataSet.addEntry(Entry(i.toFloat(), lpf.filteredData[i]))
             }
             for(i in 0 until lpf.peakIndexesBot.size) {
-                newEntry = (lpf.peakValuesBot[i] - minVal) * 100 / (maxVal - minVal)
-                peakDataSet.addEntry(Entry(lpf.peakIndexesBot[i].toFloat(),  newEntry))
+                newEntry = (lpf.filteredData[lpf.peakIndexesBot[i]] - minVal) * 100 / (maxVal - minVal)
+                peakDataSet.addEntry(Entry(lpf.peakIndexesBot[i].toFloat() + 1,  newEntry))
             }
 
+            if(lpf.peakIndexesBot.isNotEmpty()) {
+                is_new_peak = lpf.peakIndexesBot.last() == (displaySize - peakSearchSize / 2) - 1
+                println(lpf.peakIndexesBot.last() - (displaySize - peakSearchSize / 2) + 1)
+            }
+            File(current2).appendText("$scaledSample,$is_new_peak\n")
+
             combinedData.notifyDataChanged()
-            sensorPlot.invalidate()
+            ccSensorPlot.invalidate()
             breathCount = lpf.peakIndexesBot.size - 1
             if (breathCount < 0){
                 breathCount = 0

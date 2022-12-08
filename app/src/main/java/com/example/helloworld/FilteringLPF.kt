@@ -11,9 +11,10 @@ class FilteringLPF(
     private val cutoffAngular: Int,
     private val displayLength: Int,
     private val peakSearchSize: Int,
-    private val currentAcquisitionIndex: Int,
+
     private val peakThreshold: Int
 ) {
+    private val currentAcquisitionIndex = displayLength
     var filteredData: MutableList<Float> = MutableList(this.displayLength) { 0.toFloat() }
     private var unfilteredChunk: MutableList<Int> = MutableList(this.filterLength) { 0 }
     var peakIndexesTop: MutableList<Int> = mutableListOf()

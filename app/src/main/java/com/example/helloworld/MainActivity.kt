@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.*
@@ -27,15 +26,13 @@ import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
-    var myContext: Context? = null
-
     private lateinit var permissionLauncher: ActivityResultLauncher<Array<String>>
     private var isReadPermissionGranted = false
     private var isWritePermissionGranted = false
     private var isBluetoothPermissionGranted = false
     var address: String? = null
     var isConnected = false
-    val dummyData = DummyData()
+    private val calibrator = Calibration()
 
     companion object {
         var ourSensor: BluetoothDevice? = null
@@ -50,7 +47,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
-        myContext = applicationContext
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
 
         permissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()){ permissions ->
@@ -94,10 +90,10 @@ class MainActivity : AppCompatActivity() {
 
         sensorCalibrate.setOnCheckedChangeListener{
                 _,isChecked-> if(isChecked) {
-            dummyData.startRandomData()
+            calibrator.startRandomData()
         } else{
-            dummyData.stopRandomData()
-            minMax = dummyData.getMinMax()
+            calibrator.stopRandomData()
+            minMax = calibrator.getMinMax()
             btnSensor.isEnabled = true
         }
         }
@@ -126,17 +122,12 @@ class MainActivity : AppCompatActivity() {
 
             permissionRequest.add(Manifest.permission.READ_EXTERNAL_STORAGE)
         }
-
         if(!isWritePermissionGranted){
-
             permissionRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         }
-
         if(!isBluetoothPermissionGranted){
-
             permissionRequest.add(Manifest.permission.BLUETOOTH_CONNECT)
         }
-
         if(permissionRequest.isNotEmpty()){
             permissionLauncher.launch(permissionRequest.toTypedArray())
         }
@@ -144,7 +135,7 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("MissingPermission")
     private fun getPairedDevice() {
-        val pairedDevices = bluetoothAdapter!!.bondedDevices
+        val pairedDevices = bluetoothAdapter.bondedDevices
 
 
         if(pairedDevices.isNotEmpty()){
@@ -182,16 +173,14 @@ class MainActivity : AppCompatActivity() {
                     bluetoothSocket!!.connect()
                     if (bluetoothSocket!!.isConnected){
                         isConnected = true
-                    } else {
-//326451
                     }
-                    this@MainActivity.runOnUiThread(java.lang.Runnable {
-                        findViewById<TextView>(R.id.statusText).text="Połączenie z urządzeniem: połączono"
-                        findViewById<TextView>(R.id.actionReference).text="Kliknij przycisk kalibracji."
-                        findViewById<ToggleButton>(R.id.sensorCalibrate).isEnabled=true
-                    })
-
-                    //.text = "Udało się połączyć z urządzeniem."
+                    this@MainActivity.runOnUiThread {
+                        findViewById<TextView>(R.id.statusText).text =
+                            "Połączenie z urządzeniem: połączono"
+                        findViewById<TextView>(R.id.actionReference).text =
+                            "Kliknij przycisk kalibracji."
+                        findViewById<ToggleButton>(R.id.sensorCalibrate).isEnabled = true
+                    }
                 }
             } catch (e: IOException) {
                 //connectSuccess = false
@@ -200,10 +189,9 @@ class MainActivity : AppCompatActivity() {
                     bluetoothSocket!!.close()
                 }
                 e.printStackTrace()
-                this@MainActivity.runOnUiThread(java.lang.Runnable {
-                    Toast.makeText(this@MainActivity, "Nie udało się połączyć!", Toast.LENGTH_SHORT)
-                        .show()
-                })
+                this@MainActivity.runOnUiThread {
+                    Toast.makeText(this@MainActivity, "Nie udało się połączyć!", Toast.LENGTH_SHORT).show()
+                }
             }
             return null
         }
@@ -217,10 +205,9 @@ class MainActivity : AppCompatActivity() {
 //        }
     }
 
-    inner class DummyData {
+    inner class Calibration {
 
         var calibrationData: ArrayList<Float> = arrayListOf()
-        val calibrationTime = 1200
         var rawBuffer = 9999.0F
         var rawSample = 9999.0F
         var filteredSample = 9999.0F
@@ -228,11 +215,11 @@ class MainActivity : AppCompatActivity() {
 
 
         val lpfCalibration = FilteringLPF(41, 20, 5, 1200,
-            10, 1200, 6)
+            10, 6)
 
         val handler = Handler(Looper.getMainLooper())
 
-        val runnable = object : Runnable {
+        private val runnable = object : Runnable {
             override fun run() {
 
                 sensorCalibrate.isEnabled = calibrationData.size >= 41
@@ -267,7 +254,7 @@ class MainActivity : AppCompatActivity() {
 
     fun readBluetoothData(): Float {
 
-        val input = BufferedReader(InputStreamReader(bluetoothSocket!!.getInputStream()))
+        val input = BufferedReader(InputStreamReader(bluetoothSocket!!.inputStream))
         var rawData = ""
         try {
             rawData = input.readLine()

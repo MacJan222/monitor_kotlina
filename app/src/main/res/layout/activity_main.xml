@@ -11,9 +11,9 @@
         android:layout_width="0dp"
         android:layout_height="80dp"
         android:background="#bdbdbd"
+        android:gravity="center"
         android:text="Połączenie z urządzeniem: nie połączono"
         android:textAlignment="center"
-        android:gravity="center"
         android:textSize="26sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -35,12 +35,32 @@
         android:id="@+id/sensorCalibrate"
         android:layout_width="221dp"
         android:layout_height="74dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="16dp"
+        android:enabled="false"
         android:text="Skalibruj"
         android:textOff="Kliknij, żeby zacząć kalibrację"
         android:textOn="Zakończ kalibrację"
-        android:enabled="false"
-        app:layout_constraintEnd_toStartOf="@+id/btnBluetooth"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnBluetooth" />
+
+    <Button
+        android:id="@+id/btnData"
+        android:layout_width="221dp"
+        android:layout_height="74dp"
+        android:layout_marginTop="16dp"
+        android:text="Przegląd wcześniejszych danych"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnSensor" />
+
+    <Button
+        android:id="@+id/btnBluetooth"
+        android:layout_width="221dp"
+        android:layout_height="70dp"
+        android:layout_marginTop="40dp"
+        android:text="Połącz z Bluetooth"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/actionReference" />
 
@@ -48,33 +68,12 @@
         android:id="@+id/btnSensor"
         android:layout_width="221dp"
         android:layout_height="74dp"
+        android:layout_marginTop="16dp"
         android:enabled="false"
         android:text="Rozpocznij"
-        app:layout_constraintBottom_toTopOf="@+id/btnData"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/sensorCalibrate"
-        app:layout_constraintVertical_bias="0.5" />
-
-    <Button
-        android:id="@+id/btnData"
-        android:layout_width="221dp"
-        android:layout_height="74dp"
-        android:layout_marginBottom="56dp"
-        android:text="Przegląd wcześniejszych danych"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <Button
-        android:id="@+id/btnBluetooth"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
-        android:layout_marginTop="32dp"
-        android:text="Bluetooth"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/sensorCalibrate"
-        app:layout_constraintTop_toBottomOf="@+id/actionReference" />
+        app:layout_constraintTop_toBottomOf="@+id/sensorCalibrate" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
