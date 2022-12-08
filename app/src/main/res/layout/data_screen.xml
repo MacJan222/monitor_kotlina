@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:background="#161616"
     android:layout_height="match_parent">
 
     <com.github.mikephil.charting.charts.CombinedChart
@@ -20,6 +21,8 @@
         android:layout_width="199dp"
         android:layout_height="77dp"
         android:text="Otwórz katalog"
+        android:backgroundTint="#2c2c2c"
+        android:textColor="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -32,6 +35,7 @@
         android:layout_height="40dp"
         android:gravity="center"
         android:text="Number of breaths:    Average breaths/min: "
+        android:textColor="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
