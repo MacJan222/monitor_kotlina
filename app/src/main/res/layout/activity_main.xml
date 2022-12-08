@@ -15,34 +15,45 @@
         android:text="Połączenie z urządzeniem: nie połączono"
         android:textAlignment="center"
         android:textSize="26sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 
     <TextView
         android:id="@+id/actionReference"
         android:layout_width="0dp"
         android:layout_height="158dp"
+        android:layout_marginBottom="8dp"
         android:background="#bfaaba"
         android:gravity="center"
         android:text="Poczekaj na połączenie z urządzeniem."
         android:textAlignment="center"
         android:textSize="26sp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/statusText" />
+        app:layout_constraintTop_toBottomOf="@+id/statusText"
+        app:layout_constraintVertical_bias="0.0" />
 
     <ToggleButton
         android:id="@+id/sensorCalibrate"
         android:layout_width="221dp"
         android:layout_height="74dp"
         android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
         android:enabled="false"
         android:text="Skalibruj"
         android:textOff="Kliknij, żeby zacząć kalibrację"
         android:textOn="Zakończ kalibrację"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnBluetooth" />
+        app:layout_constraintTop_toBottomOf="@+id/btnBluetooth"
+        app:layout_constraintVertical_bias="0.037" />
 
     <Button
         android:id="@+id/btnData"
@@ -50,30 +61,38 @@
         android:layout_height="74dp"
         android:layout_marginTop="16dp"
         android:text="Przegląd wcześniejszych danych"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnSensor" />
+        app:layout_constraintTop_toBottomOf="@+id/btnSensor"
+        app:layout_constraintVertical_bias="0.0" />
 
     <Button
         android:id="@+id/btnBluetooth"
         android:layout_width="221dp"
         android:layout_height="70dp"
         android:layout_marginTop="40dp"
+        android:layout_marginBottom="8dp"
         android:text="Połącz z Bluetooth"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/actionReference" />
+        app:layout_constraintTop_toBottomOf="@+id/actionReference"
+        app:layout_constraintVertical_bias="0.0" />
 
     <Button
         android:id="@+id/btnSensor"
         android:layout_width="221dp"
         android:layout_height="74dp"
         android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
         android:enabled="false"
         android:text="Rozpocznij"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/sensorCalibrate" />
+        app:layout_constraintTop_toBottomOf="@+id/sensorCalibrate"
+        app:layout_constraintVertical_bias="0.0" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

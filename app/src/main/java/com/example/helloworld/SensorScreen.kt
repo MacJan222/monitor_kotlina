@@ -73,10 +73,8 @@ class SensorScreen : Activity() {
         ccSensorPlot.xAxis.setDrawGridLines(false)
         ccSensorPlot.axisLeft.setDrawGridLines(false)
         ccSensorPlot.axisRight.setEnabled(false)
-        ccSensorPlot.axisLeft.labelPosition
         ccSensorPlot.axisRight.setDrawGridLines(false)
         ccSensorPlot.description.setEnabled(false)
-        ccSensorPlot.axisLeft.isInverted = true
         ccSensorPlot.setBackgroundColor(Color.WHITE)
         ccSensorPlot.axisLeft.axisMinimum = 0.0F
         ccSensorPlot.axisLeft.axisMaximum = 100F
@@ -145,16 +143,22 @@ class SensorScreen : Activity() {
             randomDataTextView.text = rawSample.toString()
 
             filteredSample = lpf.processLPF(rawSample.toInt())
-            scaledSample = (filteredSample - minVal) * 100 / (maxVal - minVal)
+            scaledSample = 100 - (filteredSample - minVal) * 100 / (maxVal - minVal)
+            if(scaledSample > 100) {
+                scaledSample = 100F
+            }
+            if(scaledSample < 0) {
+              scaledSample = 0F
+            }
             lpf.peakDetection()
 
 
             for(i in 0 until lpf.filteredData.size) {
-                newEntry = (lpf.filteredData[i] - minVal) * 100 / (maxVal - minVal)
+                newEntry = 100 - (lpf.filteredData[i] - minVal) * 100 / (maxVal - minVal)
                 lineDataSet.addEntry(Entry(i.toFloat(), newEntry))
             }
             for(i in 0 until lpf.peakIndexesBot.size) {
-                newEntry = (lpf.filteredData[lpf.peakIndexesBot[i]] - minVal) * 100 / (maxVal - minVal)
+                newEntry = 100 - (lpf.filteredData[lpf.peakIndexesBot[i]] - minVal) * 100 / (maxVal - minVal)
                 peakDataSet.addEntry(Entry(lpf.peakIndexesBot[i].toFloat() + 1,  newEntry))
             }
 

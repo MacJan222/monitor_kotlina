@@ -8,8 +8,10 @@ import android.os.Bundle
 import android.os.Environment
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.*
 import kotlinx.android.synthetic.main.data_screen.*
+import kotlinx.android.synthetic.main.sensor_screen.*
 import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
@@ -45,20 +47,15 @@ class DataScreen : Activity() {
         peakDataSet.color = Color.GREEN
         peakData = ScatterData(peakDataSet)
 
-        for (i in 0 until 1000) {
-            lineDataSet.addEntry(Entry(i.toFloat(), 120.0F))
-        }
-        for (i in 0 until 1000) {
-            peakDataSet.addEntry(Entry(i.toFloat(), -120.0F))
-        }
+        ccDataPlot.setPinchZoom(true)
 
-        combinedData.setData(lineData)
-        combinedData.setData(peakData)
-        ccDataPlot.data = combinedData
-        lineData.notifyDataChanged()
-        peakData.notifyDataChanged()
-        combinedData.notifyDataChanged()
-
+        ccDataPlot.axisLeft.setDrawGridLines(false)
+        ccDataPlot.axisRight.isEnabled = false
+        ccDataPlot.axisRight.setDrawGridLines(false)
+        ccDataPlot.description.isEnabled = false
+        ccDataPlot.axisLeft.textColor = Color.WHITE
+//        ccDataPlot.setBackgroundColor(Color.WHITE)
+//        ccDataPlot.setScaleEnabled(false)
 
 
         btnDataPlot.setOnClickListener{
@@ -98,8 +95,18 @@ class DataScreen : Activity() {
                 }
                 i += 1
             }
+            ccDataPlot.xAxis.axisMaximum = i.toFloat()
+            ccDataPlot.xAxis.axisMinimum = 0.0F
+            ccDataPlot.setVisibleYRangeMaximum(140.0F, YAxis.AxisDependency.LEFT)
+            ccDataPlot.moveViewTo(0.0F, 50.0F, YAxis.AxisDependency.LEFT)
+            ccSensorPlot.axisLeft.axisMinimum = 0.0F
+            ccSensorPlot.axisLeft.axisMaximum = 100F
+            combinedData.setData(lineData)
+            combinedData.setData(peakData)
+            ccDataPlot.data = combinedData
             combinedData.notifyDataChanged()
             ccDataPlot.invalidate()
+//            ccDataPlot.fitScreen()
         }
     }
 
@@ -120,15 +127,14 @@ class DataScreen : Activity() {
         println("Path to the file:")
         println(pathFilename)
 
-        if (fileobj.exists() && fileobj.canRead()) {
+        return if (fileobj.exists() && fileobj.canRead()) {
 
             val ins: InputStream = fileobj.inputStream()
-            val content = ins.readBytes().toString(Charset.defaultCharset())
-            return content
+            ins.readBytes().toString(Charset.defaultCharset())
 
         }else{
 
-            return "Some error, Not found the File, or app has not permissions: $pathFilename"
+            "Some error, Not found the File, or app has not permissions: $pathFilename"
         }
     }
 
