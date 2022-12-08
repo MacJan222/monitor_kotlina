@@ -3,165 +3,214 @@ package com.example.helloworld
 import android.app.Activity
 import android.graphics.Color
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.WindowManager
-import android.widget.TextView
-import com.androidplot.xy.BoundaryMode
-import com.androidplot.xy.LineAndPointFormatter
-import com.androidplot.xy.SimpleXYSeries
-import com.androidplot.xy.XYSeries
+import android.widget.Toast
+import com.github.mikephil.charting.data.*
 import kotlinx.android.synthetic.main.sensor_screen.*
-import org.w3c.dom.Text
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
+
 
 class SensorScreen : Activity() {
-    val DISPLAY = 100
+    val displaySize = 300  // 15 seconds with 20Hz sampling
+    val peakSearchSize = 10
+    val lpfFilterSize = 41
 
     val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     val date = Date()
-    var current = ""
+    var current1 = ""
+    var current2 = ""
+
+    val lpf = FilteringLPF(lpfFilterSize, 20, 5, displaySize,
+        peakSearchSize, 6)
+
+    lateinit var lineList: ArrayList<Entry>
+    lateinit var lineDataSet: LineDataSet
+    lateinit var lineData: LineData
+    lateinit var peakList: ArrayList<Entry>
+    lateinit var peakDataSet: ScatterDataSet
+    lateinit var peakData: ScatterData
+    var minMaxString: String? = null
+    var minVal = 0.0F
+    var maxVal = 750.0F
+
+    var combinedData = CombinedData()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.sensor_screen)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        //lateinit var randomDataText = findViewById<TextView>(R.id.randomDataTextView)
 
-        val minMaxValues=intent.getStringExtra("minMax")
-        minMaxTextView.text=minMaxValues
+        minMaxString = intent.getStringExtra("minMax")
+        minMaxString = minMaxString!!.replace("(", "")
+        minMaxString = minMaxString!!.replace(")", "")
 
-        //BOUNDARIES DLA X
-        sensorPlot.setDomainBoundaries(0, BoundaryMode.FIXED,DISPLAY,BoundaryMode.FIXED)
+        val minMaxData = minMaxString!!.split(",")
+        minVal = minMaxData[0].toFloat()
+        maxVal = minMaxData[1].toFloat()
+        tvMinMax.text=minMaxString
 
-        //var sensorData: ArrayList<Float> = arrayListOf()
+        lineList = ArrayList()
+        lineDataSet = LineDataSet(lineList, "Dane z czujnika")
+        lineDataSet.setDrawCircles(false)
+        lineDataSet.setDrawValues(false)
+        lineDataSet.setDrawHighlightIndicators(false)
+        lineDataSet.color = Color.RED
+        lineData = LineData(lineDataSet)
+
+        peakList = ArrayList()
+        peakDataSet = ScatterDataSet(peakList, "Wykryte peaki")
+        peakDataSet.setDrawValues(false)
+        peakDataSet.setDrawHighlightIndicators(false)
+        peakDataSet.color = Color.GREEN
+        peakData = ScatterData(peakDataSet)
+
+        ccSensorPlot.xAxis.setDrawGridLines(false)
+        ccSensorPlot.axisLeft.setDrawGridLines(false)
+        ccSensorPlot.axisRight.setEnabled(false)
+        ccSensorPlot.axisLeft.labelPosition
+        ccSensorPlot.axisRight.setDrawGridLines(false)
+        ccSensorPlot.description.setEnabled(false)
+        ccSensorPlot.axisLeft.isInverted = true
+        ccSensorPlot.setBackgroundColor(Color.WHITE)
+        ccSensorPlot.axisLeft.axisMinimum = 0.0F
+        ccSensorPlot.axisLeft.axisMaximum = 100F
+
+        for (i in 0 until displaySize) {
+            lineDataSet.addEntry(Entry(i.toFloat(), 0.0F))
+        }
+        for (i in 0 until displaySize) {
+            peakDataSet.addEntry(Entry(i.toFloat(), 0.0F))
+        }
+
+        combinedData.setData(lineData)
+        combinedData.setData(peakData)
+        ccSensorPlot.data = combinedData
+        lineData.notifyDataChanged()
+        peakData.notifyDataChanged()
+        combinedData.notifyDataChanged()
+
+        ccSensorPlot.invalidate()
 
         btnStart.setOnClickListener {
-            sensorPlot.clear()
             btnStart.isEnabled = false
-            startRandomData()
+            startBluetoothData()
             val dirPath = baseContext.getExternalFilesDir(null).toString().removeSuffix("files")
-            current = dirPath + formatter.format(date) + ".txt"
-            //minMaxTextView.text = baseContext.getExternalFilesDir(null).toString()
+            current1 = dirPath + formatter.format(date) + "_raw.txt"
+            current2 = dirPath + formatter.format(date) + "_filtered.txt"
         }
 
         btnEnd.setOnClickListener {
-            stopRandomData()
+            stopBluetoothData()
             btnStart.isEnabled = true
-            arr = arrayListOf()
-
+            this.finish()
         }
-
 
     }
 
     //zatrzymanie pobierania danych jesli wyjdziemy z tego okna
     override fun onDestroy() {
         super.onDestroy()
-        stopRandomData()
+        stopBluetoothData()
     }
 
-    //WYKRES
-    //val seriesFormat = LineAndPointFormatter(Color.BLUE, Color.BLACK,null,null)
+    var rawSample = 9999.0F
+    var filteredSample = 9999.0F
+    val samplingFrequency = 50
+    var rawBuffer = 0.0F
+    var breathCount = 0
+    var newEntry = 0.0F
+    var scaledSample = 0.0F
+    var is_new_peak = false
 
+    val handler = Handler(Looper.getMainLooper())
 
-    var timer = Timer()
-    var rnd = 0.0F
-    var arr: MutableList<Float> = mutableListOf()
-    val calibrationTime = DISPLAY
-
-
-
-    var monitor = object : TimerTask() {
+    val runnable = object : Runnable {
         override fun run() {
-            //setContentView(R.layout.sensor_screen)
-            rnd=randomNumber()
-            println(arr)
-            File(current).appendText(rnd.toString()+"\n")
-            //findViewById<TextView>(R.id.randomDataTextView).text=rnd.toString()
-            this@SensorScreen.runOnUiThread(java.lang.Runnable {
-                findViewById<TextView>(R.id.randomDataTextView).text=rnd.toString()
-                val seriesFormat = LineAndPointFormatter(Color.BLUE, Color.BLACK,null,null)
-                val series: XYSeries = SimpleXYSeries(arr, SimpleXYSeries.ArrayFormat.Y_VALS_ONLY, "")
-                findViewById<com.androidplot.xy.XYPlot>(R.id.sensorPlot).clear()
-                findViewById<com.androidplot.xy.XYPlot>(R.id.sensorPlot).addSeries(series,seriesFormat)
-                findViewById<com.androidplot.xy.XYPlot>(R.id.sensorPlot).redraw()
-            })
-            if(arr.size>calibrationTime){
-                arr.removeAt(0)
-            }
-            if(rnd == 0.0F && arr.isNotEmpty()){
-                arr.add(arr.last())
-            } else {
-                arr.add(rnd)
+
+            lineDataSet.clear()
+            peakDataSet.clear()
+            rawSample = readBluetoothData()
+
+            if(rawSample == 9999.0F) {
+                rawSample = rawBuffer
             }
 
-            //println(arr.size)
-            //println(arr)
+            rawBuffer = rawSample
+            randomDataTextView.text = rawSample.toString()
+
+            filteredSample = lpf.processLPF(rawSample.toInt())
+            scaledSample = (filteredSample - minVal) * 100 / (maxVal - minVal)
+            lpf.peakDetection()
+
+
+            for(i in 0 until lpf.filteredData.size) {
+                newEntry = (lpf.filteredData[i] - minVal) * 100 / (maxVal - minVal)
+                lineDataSet.addEntry(Entry(i.toFloat(), newEntry))
+            }
+            for(i in 0 until lpf.peakIndexesBot.size) {
+                newEntry = (lpf.filteredData[lpf.peakIndexesBot[i]] - minVal) * 100 / (maxVal - minVal)
+                peakDataSet.addEntry(Entry(lpf.peakIndexesBot[i].toFloat() + 1,  newEntry))
+            }
+
+            if(lpf.peakIndexesBot.isNotEmpty()) {
+                is_new_peak = lpf.peakIndexesBot.last() == (displaySize - peakSearchSize / 2) - 1
+                println(lpf.peakIndexesBot.last() - (displaySize - peakSearchSize / 2) + 1)
+            }
+            File(current2).appendText("$scaledSample,$is_new_peak\n")
+
+            combinedData.notifyDataChanged()
+            ccSensorPlot.invalidate()
+            breathCount = lpf.peakIndexesBot.size - 1
+            if (breathCount < 0){
+                breathCount = 0
+            }
+
+            tvBreathCount.text = "Liczba oddechów na minutę: " + breathCount
+
+            handler.postDelayed(this, samplingFrequency.toLong())
         }
     }
 
-    fun startRandomData(){
-        timer.schedule(monitor, 50, 50)
-
-    }
-
-    fun stopRandomData(){
-        monitor.cancel()
-        timer.cancel()
-
-        monitor = object : TimerTask() {
-            override fun run() {
-                //setContentView(R.layout.sensor_screen)
-                rnd=randomNumber()
-                println(rnd)
-                //findViewById<TextView>(R.id.randomDataTextView).text=rnd.toString()
-                this@SensorScreen.runOnUiThread(java.lang.Runnable {
-                    findViewById<TextView>(R.id.randomDataTextView).text=rnd.toString()
-                    val seriesFormat = LineAndPointFormatter(Color.BLUE, Color.BLACK,null,null)
-                    val series: XYSeries = SimpleXYSeries(arr, SimpleXYSeries.ArrayFormat.Y_VALS_ONLY, "")
-                    findViewById<com.androidplot.xy.XYPlot>(R.id.sensorPlot).clear()
-                    findViewById<com.androidplot.xy.XYPlot>(R.id.sensorPlot).addSeries(series,seriesFormat)
-                    findViewById<com.androidplot.xy.XYPlot>(R.id.sensorPlot).redraw()
-                })
-                if(arr.size>calibrationTime){
-                    arr.removeAt(0)
-                }
-                if(rnd == 0.0F && arr.isNotEmpty()){
-                    arr.add(arr.last())
-                } else {
-                    arr.add(rnd)
-                }
-                //println(arr.size)
-                //println(arr)
-            }
+        fun startBluetoothData() {
+            handler.postDelayed(runnable, samplingFrequency.toLong())
         }
-        timer=Timer()
-    }
 
-    fun randomNumber(): Float {
+        fun stopBluetoothData() {
+            handler.removeCallbacks(runnable)
+        }
+
+    fun readBluetoothData(): Float {
 
         val input = BufferedReader(InputStreamReader(MainActivity.bluetoothSocket!!.getInputStream()))
-        val rawData = input.readLine()
+        var rawData = ""
+        try {
+            rawData = input.readLine()
+        }
+        catch (e:java.lang.Exception) {
+            Toast.makeText(this@SensorScreen, "Bluetooth nie działa!", Toast.LENGTH_SHORT).show()
+        }
+        var data = 9999.0F
+        var correctData = 9999.0F
 
-        var data = emptyList<String>()
         if(rawData.isNotEmpty()){
-            data = rawData.split(" ")
+            data = rawData.toFloat()
         }
 
-        var correctData = 0.0F
-
-        if(data.size == 4 && data[0].isNotEmpty()) {
-            correctData = data[0].toFloat()
+        if(data > 100.0F) {
+            correctData = data
         }
         return correctData
     }
 
-    fun getMinMax(): Pair<Float, Float> {
-        return Pair(arr.min(),arr.max())
-    }
-
 }
+
+//    fun getMinMax(): Pair<Float, Float> {
+//        return Pair(arr.min(),arr.max())
+//    }
+

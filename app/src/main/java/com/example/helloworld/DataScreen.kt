@@ -8,40 +8,66 @@ import android.os.Bundle
 import android.os.Environment
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.motion.widget.Debug.getState
-import com.androidplot.xy.*
+import com.github.mikephil.charting.data.*
 import kotlinx.android.synthetic.main.data_screen.*
 import java.io.File
 import java.io.InputStream
 import java.nio.charset.Charset
-import java.text.FieldPosition
-import java.text.Format
-import java.text.ParsePosition
 
 
 class DataScreen : Activity() {
+
+    lateinit var lineList: java.util.ArrayList<Entry>
+    lateinit var lineDataSet: LineDataSet
+    lateinit var lineData: LineData
+    lateinit var peakList: java.util.ArrayList<Entry>
+    lateinit var peakDataSet: ScatterDataSet
+    lateinit var peakData: ScatterData
+    var combinedData = CombinedData()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.data_screen)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        // TO JEST ZOOM I PAN aka przesuwanie i przyblizanie wykresu
-        PanZoom.attach(dataPlot)
+
+        lineList = java.util.ArrayList()
+        lineDataSet = LineDataSet(lineList, "Dane z czujnika")
+        lineDataSet.setDrawCircles(false)
+        lineDataSet.setDrawValues(false)
+        lineDataSet.setDrawHighlightIndicators(false)
+        lineDataSet.color = Color.RED
+        lineData = LineData(lineDataSet)
+
+        peakList = java.util.ArrayList()
+        peakDataSet = ScatterDataSet(peakList, "Wykryte peaki")
+        peakDataSet.setDrawValues(false)
+        peakDataSet.setDrawHighlightIndicators(false)
+        peakDataSet.color = Color.GREEN
+        peakData = ScatterData(peakDataSet)
+
+        for (i in 0 until 1000) {
+            lineDataSet.addEntry(Entry(i.toFloat(), 120.0F))
+        }
+        for (i in 0 until 1000) {
+            peakDataSet.addEntry(Entry(i.toFloat(), -120.0F))
+        }
+
+        combinedData.setData(lineData)
+        combinedData.setData(peakData)
+        ccDataPlot.data = combinedData
+        lineData.notifyDataChanged()
+        peakData.notifyDataChanged()
+        combinedData.notifyDataChanged()
+
+
 
         btnDataPlot.setOnClickListener{
-            dataPlot.clear()
-            //PanZoom.attach(dataPlot).zoom = null
-            //var dataPlotPanZoom = PanZoom.attach(dataPlot)
             val intent = Intent()
-            //val z =Uri.parse(baseContext.getExternalFilesDir(null)?.getPath()
-               //     +  File.separator + "myFolder" + File.separator)
-            //println(z)
-            intent.setDataAndType(Uri.parse(Environment.getExternalStorageDirectory().getPath()), "*/*")
-            intent.setAction(Intent.ACTION_GET_CONTENT)
+            intent.setDataAndType(Uri.parse(Environment.getExternalStorageDirectory().path), "*/*")
+            intent.action = Intent.ACTION_GET_CONTENT
 
             startActivityForResult(Intent.createChooser(intent, "Select a file"), 777)
         }
-
-
     }
 
 
@@ -54,37 +80,31 @@ class DataScreen : Activity() {
             val fileName = selectedFile?.split("/")?.last()
             val path = baseContext.getExternalFilesDir(null).toString().removeSuffix("files")
             val selectedFilePath = path + fileName
-            //pathToFile.text = getTextContent(path+fileName)
-            //var values: ArrayList<Float> = arrayListOf()
-            val values = getTextContent(selectedFilePath).split("\r?\n|\r".toRegex()).dropLast(1).map {it.toFloat()}
-            //println("AAA"+values)
-            val seriesFormat = LineAndPointFormatter(Color.BLUE, Color.BLACK,null,null)
-            val series: XYSeries = SimpleXYSeries(values, SimpleXYSeries.ArrayFormat.Y_VALS_ONLY, "")
-            dataPlot.addSeries(series,seriesFormat)
-            dataPlot.redraw()
 
-            dataPlot.graph.getLineLabelStyle(XYGraphWidget.Edge.BOTTOM).format = object : Format() {
-                override fun format(
-                    obj: Any?,
-                    toAppendTo: StringBuffer,
-                    pos: FieldPosition
-                ) : StringBuffer {
-                    val i = Math.round((obj as Number).toFloat())
-                    return toAppendTo.append(values[i])
+            val values = getTextContent(selectedFilePath).split("\r?\n|\r".toRegex()).dropLast(1)
+
+            lineDataSet.clear()
+            peakDataSet.clear()
+
+            var i = 0
+            var numberOfBreaths = 0
+            for (value in values) {
+                println(value)
+                val splitValues = value.split(',')
+                lineDataSet.addEntry(Entry(i.toFloat(), splitValues[0].toFloat()))
+                if(splitValues[1].toBoolean()) {
+                    peakDataSet.addEntry(Entry(i.toFloat(), splitValues[0].toFloat()))
+                    numberOfBreaths += 1
                 }
-
-                override fun parseObject(p0: String?, p1: ParsePosition?): Any? {
-                    return null
-                }
-
-
+                i += 1
             }
-
+            combinedData.notifyDataChanged()
+            ccDataPlot.invalidate()
         }
     }
 
 
-    fun getTextContent(pathFilename: String): String {
+    private fun getTextContent(pathFilename: String): String {
 
         val fileobj = File( pathFilename )
 
@@ -102,13 +122,13 @@ class DataScreen : Activity() {
 
         if (fileobj.exists() && fileobj.canRead()) {
 
-            var ins: InputStream = fileobj.inputStream()
-            var content = ins.readBytes().toString(Charset.defaultCharset())
+            val ins: InputStream = fileobj.inputStream()
+            val content = ins.readBytes().toString(Charset.defaultCharset())
             return content
 
         }else{
 
-            return "Some error, Not found the File, or app has not permissions: " + pathFilename
+            return "Some error, Not found the File, or app has not permissions: $pathFilename"
         }
     }
 
