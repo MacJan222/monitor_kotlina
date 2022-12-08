@@ -47,6 +47,7 @@ class DataScreen : Activity() {
         peakDataSet.color = Color.GREEN
         peakData = ScatterData(peakDataSet)
 
+
         ccDataPlot.setPinchZoom(true)
 
         ccDataPlot.axisLeft.setDrawGridLines(false)
@@ -56,6 +57,7 @@ class DataScreen : Activity() {
         ccDataPlot.axisLeft.textColor = Color.WHITE
 //        ccDataPlot.setBackgroundColor(Color.WHITE)
 //        ccDataPlot.setScaleEnabled(false)
+
 
 
         btnDataPlot.setOnClickListener{
@@ -130,6 +132,7 @@ class DataScreen : Activity() {
         return if (fileobj.exists() && fileobj.canRead()) {
 
             val ins: InputStream = fileobj.inputStream()
+
             ins.readBytes().toString(Charset.defaultCharset())
 
         }else{

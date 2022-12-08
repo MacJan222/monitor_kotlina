@@ -143,6 +143,7 @@ class SensorScreen : Activity() {
             randomDataTextView.text = rawSample.toString()
 
             filteredSample = lpf.processLPF(rawSample.toInt())
+
             scaledSample = 100 - (filteredSample - minVal) * 100 / (maxVal - minVal)
             if(scaledSample > 100) {
                 scaledSample = 100F
@@ -151,7 +152,6 @@ class SensorScreen : Activity() {
               scaledSample = 0F
             }
             lpf.peakDetection()
-
 
             for(i in 0 until lpf.filteredData.size) {
                 newEntry = 100 - (lpf.filteredData[i] - minVal) * 100 / (maxVal - minVal)
