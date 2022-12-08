@@ -6,9 +6,12 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.WindowManager
+import android.widget.Toast
 import com.github.mikephil.charting.data.*
 import kotlinx.android.synthetic.main.sensor_screen.*
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -32,11 +35,10 @@ class SensorScreen : Activity() {
     lateinit var peakDataSet: ScatterDataSet
     lateinit var peakData: ScatterData
     var minMaxString: String? = null
-//    var minMaxData: List<String>? = null
-//    var minData: Float? = null
-//    var maxData: Float? = null
-    var combinedData = CombinedData()
+    var minVal = 0.0F
+    var maxVal = 750.0F
 
+    var combinedData = CombinedData()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,13 +46,12 @@ class SensorScreen : Activity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         minMaxString = intent.getStringExtra("minMax")
-//
-//        minMaxString = minMaxString!!.replace("(", "")
-//        minMaxString = minMaxString!!.replace(")", "")
-//
-//        minMaxData = minMaxString!!.split(",")
-//        minData = minMaxData!![0].toFloat() - 50.0F
-//        maxData = minMaxData!![1].toFloat() + 50.0F
+        minMaxString = minMaxString!!.replace("(", "")
+        minMaxString = minMaxString!!.replace(")", "")
+
+        val minMaxData = minMaxString!!.split(",")
+        minVal = minMaxData[0].toFloat()
+        maxVal = minMaxData[1].toFloat()
         minMaxTextView.text=minMaxString
 
         lineList = ArrayList()
@@ -76,8 +77,8 @@ class SensorScreen : Activity() {
         sensorPlot.description.setEnabled(false)
         sensorPlot.axisLeft.isInverted = true
         sensorPlot.setBackgroundColor(Color.WHITE)
-        sensorPlot.axisLeft.axisMaximum = 750F
-        sensorPlot.axisLeft.axisMinimum = 100F
+        sensorPlot.axisLeft.axisMinimum = 0.0F
+        sensorPlot.axisLeft.axisMaximum = 100F
 
         for (i in 0 until displaySize) {
             lineDataSet.addEntry(Entry(i.toFloat(), 0.0F))
@@ -121,7 +122,8 @@ class SensorScreen : Activity() {
     var filteredSample = 9999.0F
     val samplingFrequency = 50
     var rawBuffer = 0.0F
-    var lpfFillingTime = 0
+    var breathCount = 0
+    var newEntry = 0.0F
 
     val handler = Handler(Looper.getMainLooper())
 
@@ -145,14 +147,23 @@ class SensorScreen : Activity() {
             File(current2).appendText(filteredSample.toString()+"\n")
 
             for(i in 0 until lpf.filteredData.size) {
-                lineDataSet.addEntry(Entry(i.toFloat(), lpf.filteredData[i]))
+                newEntry = (lpf.filteredData[i] - minVal) * 100 / (maxVal - minVal)
+                lineDataSet.addEntry(Entry(i.toFloat(), newEntry))
+//                lineDataSet.addEntry(Entry(i.toFloat(), lpf.filteredData[i]))
             }
             for(i in 0 until lpf.peakIndexesBot.size) {
-                peakDataSet.addEntry(Entry(lpf.peakIndexesBot[i].toFloat(),  lpf.filteredData[lpf.peakIndexesBot[i]]))
+                newEntry = (lpf.peakValuesBot[i] - minVal) * 100 / (maxVal - minVal)
+                peakDataSet.addEntry(Entry(lpf.peakIndexesBot[i].toFloat(),  newEntry))
             }
 
             combinedData.notifyDataChanged()
             sensorPlot.invalidate()
+            breathCount = lpf.peakIndexesBot.size - 1
+            if (breathCount < 0){
+                breathCount = 0
+            }
+
+            tvBreathCount.text = "Liczba oddechów na minutę: " + breathCount
 
             handler.postDelayed(this, samplingFrequency.toLong())
         }
@@ -165,7 +176,31 @@ class SensorScreen : Activity() {
         fun stopBluetoothData() {
             handler.removeCallbacks(runnable)
         }
+
+    fun readBluetoothData(): Float {
+
+        val input = BufferedReader(InputStreamReader(MainActivity.bluetoothSocket!!.getInputStream()))
+        var rawData = ""
+        try {
+            rawData = input.readLine()
+        }
+        catch (e:java.lang.Exception) {
+            Toast.makeText(this@SensorScreen, "Bluetooth nie działa!", Toast.LENGTH_SHORT).show()
+        }
+        var data = 9999.0F
+        var correctData = 9999.0F
+
+        if(rawData.isNotEmpty()){
+            data = rawData.toFloat()
+        }
+
+        if(data > 100.0F) {
+            correctData = data
+        }
+        return correctData
     }
+
+}
 
 //    fun getMinMax(): Pair<Float, Float> {
 //        return Pair(arr.min(),arr.max())
