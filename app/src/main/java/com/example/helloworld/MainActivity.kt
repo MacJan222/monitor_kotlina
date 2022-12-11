@@ -91,10 +91,12 @@ class MainActivity : AppCompatActivity() {
         sensorCalibrate.setOnCheckedChangeListener{
                 _,isChecked-> if(isChecked) {
             calibrator.startRandomData()
+            findViewById<TextView>(R.id.actionReference).text = "Weż głęboki wdech i wydech. Następnie kliknij ponownie przycik kalibracji."
         } else{
             calibrator.stopRandomData()
             minMax = calibrator.getMinMax()
             btnSensor.isEnabled = true
+            findViewById<TextView>(R.id.actionReference).text = "Kliknij przycisk 'Rozpocznij' w celu rozpoczęcia pomiarów."
         }
         }
     }
@@ -187,6 +189,8 @@ class MainActivity : AppCompatActivity() {
                 isConnected = false
                 if (bluetoothSocket != null) {
                     bluetoothSocket!!.close()
+                    findViewById<TextView>(R.id.statusText).text = "Połączenie z urządzeniem: nie połączono"
+                    findViewById<TextView>(R.id.actionReference).text = "Kliknij przycisk bluetooth w celu połączenia z urządzeniem."
                 }
                 e.printStackTrace()
                 this@MainActivity.runOnUiThread {
@@ -262,6 +266,10 @@ class MainActivity : AppCompatActivity() {
         catch (e:java.lang.Exception) {
             Toast.makeText(this@MainActivity, "Bluetooth nie działa!", Toast.LENGTH_SHORT).show()
             this@MainActivity.findViewById<ToggleButton>(R.id.sensorCalibrate).isEnabled = false
+            this@MainActivity.findViewById<Button>(R.id.btnSensor).isEnabled = false
+            this@MainActivity.findViewById<TextView>(R.id.statusText).text = "Połączenie z urządzeniem: połączono"
+            this@MainActivity.findViewById<TextView>(R.id.actionReference).text = "Kliknij przycisk bluetooth lub zresetuj najpierw aplikację."
+            
         }
         var data = 9999.0F
         var correctData = 9999.0F
