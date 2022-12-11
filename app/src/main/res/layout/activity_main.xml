@@ -30,7 +30,7 @@
         android:layout_height="158dp"
         android:background="#383838"
         android:gravity="center"
-        android:text="Poczekaj na połączenie z urządzeniem."
+        android:text="Kliknij przycisk bluetooth w celu połączenia z urządzeniem."
         android:textColor="@color/white"
         android:textAlignment="center"
         android:textSize="26sp"
