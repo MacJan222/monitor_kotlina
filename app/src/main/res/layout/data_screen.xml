@@ -1,38 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:background="#161616"
     android:layout_height="match_parent">
 
-    <com.androidplot.xy.XYPlot
-        android:id="@+id/data_plot"
-        android:layout_width="0dp"
-        android:layout_height="229dp"
-        style="@style/APDefacto.Light"
-        app:title="Dane"
-        app:rangeTitle="range"
+    <com.github.mikephil.charting.charts.CombinedChart
+        android:id="@+id/ccDataPlot"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_370sdp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:rangeTitle="range"
+        app:title="Dane" />
 
     <Button
         android:id="@+id/btnDataPlot"
         android:layout_width="199dp"
         android:layout_height="77dp"
-        android:layout_marginTop="40dp"
-        android:text="Odtwórz dane"
+        android:text="Otwórz katalog"
+        android:backgroundTint="#2c2c2c"
+        android:textColor="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/data_plot" />
+        app:layout_constraintTop_toBottomOf="@+id/ccDataPlot"
+        app:layout_constraintVertical_bias="0.71000004" />
 
     <TextView
-        android:id="@+id/pathToFile"
-        android:layout_width="253dp"
-        android:layout_height="83dp"
-        android:text="Sciezka"
+        android:id="@+id/tvBreathsInfo"
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        android:gravity="center"
+        android:text="Number of breaths:    Average breaths/min: "
+        android:textColor="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnDataPlot" />
+        app:layout_constraintTop_toBottomOf="@+id/ccDataPlot"
+        app:layout_constraintVertical_bias="0.07999998" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
